@@ -38,55 +38,67 @@ def extract_keypoints(results):
 class RepCounter:
     def __init__(self):
         self.reps = 0
-        self.stage = None
+        self.stages = {
+            "curl": None,
+            "press": None,
+            "squat": None,
+            "hammer": None,
+            "pushup": None
+        }
 
     def reset(self):
         self.reps = 0
-        self.stage = None
+        self.stages = {
+            "curl": None,
+            "press": None,
+            "squat": None,
+            "hammer": None,
+            "pushup": None
+        }
 
     def update_curl(self, angle):
         if angle > 160:
-            self.stage = "down"
-        if angle < 60 and self.stage == "down":
-            self.stage = "up"
+            self.stages["curl"] = "down"
+        if angle < 60 and self.stages["curl"] == "down":
+            self.stages["curl"] = "up"
             self.reps += 1
         return self.reps
 
     def update_press(self, angle):
         if angle < 90:
-            self.stage = "down"
-        if angle > 160 and self.stage == "down":
-            self.stage = "up"
+            self.stages["press"] = "down"
+        if angle > 160 and self.stages["press"] == "down":
+            self.stages["press"] = "up"
             self.reps += 1
         return self.reps
 
     def update_squat(self, angle):
-        if self.stage is None:
-            self.stage = "up"
-        if angle < 90 and self.stage == "up":
-            self.stage = "down"
-        if angle > 160 and self.stage == "down":
-            self.stage = "up"
+        if self.stages["squat"] is None:
+            self.stages["squat"] = "up"
+        if angle < 90 and self.stages["squat"] == "up":
+            self.stages["squat"] = "down"
+        if angle > 160 and self.stages["squat"] == "down":
+            self.stages["squat"] = "up"
             self.reps += 1
         return self.reps
 
     def update_hammer_curl(self, angle):
-        if self.stage is None:
-            self.stage = "down"
-        if angle < 60 and self.stage == "down":
-            self.stage = "up"
-        if angle > 140 and self.stage == "up":
-            self.stage = "down"
+        if self.stages["hammer"] is None:
+            self.stages["hammer"] = "down"
+        if angle < 60 and self.stages["hammer"] == "down":
+            self.stages["hammer"] = "up"
+        if angle > 140 and self.stages["hammer"] == "up":
+            self.stages["hammer"] = "down"
             self.reps += 1
         return self.reps
 
     def update_pushup(self, angle):
-        if self.stage is None:
-            self.stage = "up"
-        if angle < 90 and self.stage == "up":
-            self.stage = "down"
-        if angle > 160 and self.stage == "down":
-            self.stage = "up"
+        if self.stages["pushup"] is None:
+            self.stages["pushup"] = "up"
+        if angle < 90 and self.stages["pushup"] == "up":
+            self.stages["pushup"] = "down"
+        if angle > 160 and self.stages["pushup"] == "down":
+            self.stages["pushup"] = "up"
             self.reps += 1
         return self.reps
 
@@ -120,8 +132,8 @@ def process_gym_video(video_path, output_filename, limit_frames=300):
     out_dir = os.path.dirname(output_filename)
     os.makedirs(out_dir, exist_ok=True)
     
-    # Use MP4V codec which is generally supported on Windows and browsers
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # Use AVC1 codec (H.264) for HTML5 native browser playback support
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
     out = cv2.VideoWriter(output_filename, fourcc, fps, (width, height))
     
     counter = RepCounter()
@@ -221,90 +233,122 @@ webcam_status = {
 
 def process_single_frame(frame):
     global webcam_status
-    load_models()
-    
-    # 1. Classification
-    cls_results = cls_model(frame, verbose=False)[0]
-    class_id = cls_results.probs.top1
-    exercise = cls_results.names[class_id]
-    confidence = float(cls_results.probs.top1conf)
-    
-    # 2. Pose estimation
-    pose_results = pose_model(frame, verbose=False)[0]
-    keypoints = extract_keypoints(pose_results)
-    
-    # Plot YOLO poses on the frame
-    annotated_frame = pose_results.plot()
-    
-    # 3. Calculate metrics based on exercise
-    angle = None
-    feedback = "Ready"
-    reps = webcam_counter.reps
-    
-    if exercise == "barbell biceps curl":
-        if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
-            angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
-            reps = webcam_counter.update_curl(angle)
-            feedback = "Curl Up" if angle > 70 else "Good"
-    elif exercise == "shoulder press":
-        if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
-            angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
-            reps = webcam_counter.update_press(angle)
-            feedback = "Push Higher" if angle < 150 else "Good"
-    elif exercise == "squat":
-        if keypoints.get("right_hip") and keypoints.get("right_knee") and keypoints.get("right_ankle"):
-            angle = get_angle(keypoints["right_hip"], keypoints["right_knee"], keypoints["right_ankle"])
-            reps = webcam_counter.update_squat(angle)
-            feedback = "Down" if angle < 90 else "Stand Up"
-    elif exercise == "hammer curl":
-        if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
-            angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
-            reps = webcam_counter.update_hammer_curl(angle)
-            feedback = "Curl Up" if angle > 70 else "Good"
-    elif exercise == "push-up":
-        if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
-            angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
-            reps = webcam_counter.update_pushup(angle)
-            feedback = "Go Down" if angle < 90 else "Push Up"
-            
-    # Update global status
-    webcam_status = {
-        "exercise": exercise,
-        "confidence": round(confidence * 100, 2),
-        "reps": reps,
-        "feedback": feedback,
-        "angle": round(angle, 1) if angle is not None else 0.0
-    }
-    
-    # Draw customized text HUD overlays on the frame
-    hud_color = (0, 255, 0) # Green
-    cv2.rectangle(annotated_frame, (10, 10), (320, 180), (0, 0, 0), -1) # Semi-transparent backdrop overlay
-    cv2.putText(annotated_frame, f"Exercise: {exercise.upper()}", (20, 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
-    cv2.putText(annotated_frame, f"Confidence: {confidence*100:.1f}%", (20, 70),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
-    cv2.putText(annotated_frame, f"Reps: {reps}", (20, 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
-    cv2.putText(annotated_frame, f"Feedback: {feedback}", (20, 130),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
-    if angle is not None:
-        cv2.putText(annotated_frame, f"Angle: {int(angle)} deg", (20, 160),
+    try:
+        load_models()
+        
+        # 1. Classification
+        cls_results = cls_model(frame, verbose=False)[0]
+        class_id = cls_results.probs.top1
+        exercise = cls_results.names[class_id]
+        confidence = float(cls_results.probs.top1conf)
+        
+        # 2. Pose estimation
+        pose_results = pose_model(frame, verbose=False)[0]
+        keypoints = extract_keypoints(pose_results)
+        
+        # Plot YOLO poses on the frame
+        annotated_frame = pose_results.plot()
+        
+        # 3. Calculate metrics based on exercise
+        angle = None
+        feedback = "Ready"
+        reps = webcam_counter.reps
+        
+        if exercise == "barbell biceps curl":
+            if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
+                angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
+                reps = webcam_counter.update_curl(angle)
+                feedback = "Curl Up" if angle > 70 else "Good"
+        elif exercise == "shoulder press":
+            if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
+                angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
+                reps = webcam_counter.update_press(angle)
+                feedback = "Push Higher" if angle < 150 else "Good"
+        elif exercise == "squat":
+            if keypoints.get("right_hip") and keypoints.get("right_knee") and keypoints.get("right_ankle"):
+                angle = get_angle(keypoints["right_hip"], keypoints["right_knee"], keypoints["right_ankle"])
+                reps = webcam_counter.update_squat(angle)
+                feedback = "Down" if angle < 90 else "Stand Up"
+        elif exercise == "hammer curl":
+            if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
+                angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
+                reps = webcam_counter.update_hammer_curl(angle)
+                feedback = "Curl Up" if angle > 70 else "Good"
+        elif exercise == "push-up":
+            if keypoints.get("right_shoulder") and keypoints.get("right_elbow") and keypoints.get("right_wrist"):
+                angle = get_angle(keypoints["right_shoulder"], keypoints["right_elbow"], keypoints["right_wrist"])
+                reps = webcam_counter.update_pushup(angle)
+                feedback = "Go Down" if angle < 90 else "Push Up"
+                
+        # Update global status
+        webcam_status = {
+            "exercise": exercise,
+            "confidence": round(confidence * 100, 2),
+            "reps": reps,
+            "feedback": feedback,
+            "angle": round(angle, 1) if angle is not None else 0.0
+        }
+        
+        # Draw customized text HUD overlays on the frame
+        hud_color = (0, 255, 0) # Green
+        cv2.rectangle(annotated_frame, (10, 10), (320, 180), (0, 0, 0), -1) # Semi-transparent backdrop overlay
+        cv2.putText(annotated_frame, f"Exercise: {exercise.upper()}", (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
-                    
-    return annotated_frame
+        cv2.putText(annotated_frame, f"Confidence: {confidence*100:.1f}%", (20, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
+        cv2.putText(annotated_frame, f"Reps: {reps}", (20, 100),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
+        cv2.putText(annotated_frame, f"Feedback: {feedback}", (20, 130),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
+        if angle is not None:
+            cv2.putText(annotated_frame, f"Angle: {int(angle)} deg", (20, 160),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
+                        
+        return annotated_frame
+    except Exception as e:
+        print(f"[ERROR] Exception in process_single_frame: {e}")
+        return frame
 
 def generate_gym_webcam_frames():
-    cap = cv2.VideoCapture(0)
+    import time
+    
+    # Auto-detect camera index that actually yields frames on Windows
+    cap = None
+    for idx in [0, 1, 2]:
+        print(f"Testing camera index {idx}...")
+        temp_cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+        if temp_cap.isOpened():
+            success, _ = temp_cap.read()
+            if success:
+                cap = temp_cap
+                print(f"[SUCCESS] Selected camera index {idx}")
+                break
+            temp_cap.release()
+            
+    if cap is None:
+        # Fallback to index 0 default if no DSHOW cameras yielded frames
+        print("No camera found via DirectShow. Falling back to default VideoCapture(0)")
+        cap = cv2.VideoCapture(0)
+        
+    consecutive_failures = 0
     try:
         while True:
             success, frame = cap.read()
             if not success:
-                break
+                consecutive_failures += 1
+                if consecutive_failures > 30: # ~1 second of constant failures
+                    print("Too many consecutive camera read failures. Exiting stream.")
+                    break
+                time.sleep(0.03)
+                continue
+            
+            consecutive_failures = 0
             annotated = process_single_frame(frame)
             ret, buffer = cv2.imencode('.jpg', annotated)
             if ret:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            time.sleep(0.03) # Cap stream at ~30 FPS to avoid CPU lock
     finally:
         cap.release()
 

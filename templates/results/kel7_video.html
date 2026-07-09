@@ -1,0 +1,26 @@
+<div>
+    <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <span class="result-title" style="font-weight: 700; color: #fff; font-size: 1.1rem;">Hasil Tracking Video (YOLOv8 + ByteTrack)</span>
+        <span class="result-badge badge-success" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">Selesai</span>
+    </div>
+    
+    <div class="details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+        <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); text-align: center;">
+            <div style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Pemain Unik Ditemukan</div>
+            <div style="font-size: 1.8rem; font-weight: 900; color: #00E5FF; font-family: 'Barlow Condensed', sans-serif;">{{ total_unique_players }}</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); text-align: center;">
+            <div style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Tracker Model</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent); margin-top: 5px; font-family: 'Barlow Condensed', sans-serif;">BYTETRACK</div>
+        </div>
+    </div>
+    
+    <div class="processed-media" style="position: relative; border-radius: 12px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.1); margin-bottom: 8px; background: #000;">
+        <video src="{{ annotated_video_url }}" style="width: 100%; display: block; max-height: 300px; object-fit: contain;" controls autoplay loop muted></video>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-secondary); padding: 0 4px;">
+        <span>Frame rate: ~30 FPS</span>
+        <span>Total diproses: {{ total_frames_processed }} Frame</span>
+    </div>
+</div>

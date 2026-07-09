@@ -1,0 +1,35 @@
+<div>
+    <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <span class="result-title" style="font-weight: 700; color: #fff; font-size: 1.1rem;">Deteksi Tackle Gambar (EfficientNet)</span>
+        {% if label == 'Foul Tackle' or label == 'FOUL TACKLE' %}
+        <span class="result-badge badge-danger" style="background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.3); color: #dc2626; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ label }}</span>
+        {% else %}
+        <span class="result-badge badge-success" style="background: rgba(22, 163, 74, 0.15); border: 1px solid rgba(22, 163, 74, 0.3); color: #16a34a; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ label }}</span>
+        {% endif %}
+    </div>
+    
+    <div style="margin-bottom: 1.25rem; text-align: center; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
+        <div style="font-size: 2.2rem; font-weight: 900; color: {% if label == 'Foul Tackle' or label == 'FOUL TACKLE' %}#ef4444{% else %}#10b981{% endif %}; font-family: 'Barlow Condensed', sans-serif; line-height: 1;">
+            {{ confidence|round(1) }}%
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Tingkat Keyakinan Model</p>
+    </div>
+    
+    <div style="font-size: 0.88rem; line-height: 1.5; border-left: 3px solid {% if label == 'Foul Tackle' or label == 'FOUL TACKLE' %}#ef4444{% else %}#10b981{% endif %}; padding-left: 10px; background: rgba(255,255,255,0.02); padding-top: 8px; padding-bottom: 8px; border-radius: 0 8px 8px 0; margin-bottom: 12px;">
+        <strong style="color: {% if label == 'Foul Tackle' or label == 'FOUL TACKLE' %}#ef4444{% else %}#10b981{% endif %};">Hasil Klasifikasi:</strong>
+        <p style="color: var(--text-secondary); margin-top: 4px;">
+            {% if label == 'Foul Tackle' or label == 'FOUL TACKLE' %}
+            Tackle dinilai sebagai PELANGGARAN. Model mendeteksi kontak fisik berbahaya seperti kaki terangkat tinggi atau tabrakan langsung ke arah sendi lawan.
+            {% else %}
+            Tackle dinilai BERSIH. Model mendeteksi kontak langsung yang tertuju secara spesifik pada bola (clean block).
+            {% endif %}
+        </p>
+    </div>
+    
+    <div class="processed-media" style="position: relative; border-radius: 12px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.1); background: #000;">
+        <img src="{{ image_url }}" style="width: 100%; display: block; max-height: 280px; object-fit: contain;" alt="Tackle Image Analysis">
+    </div>
+    <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px; text-align: right;">
+        Model: EfficientNet-B0 (Kel_9)
+    </div>
+</div>

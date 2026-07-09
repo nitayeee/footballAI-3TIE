@@ -3,13 +3,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const restartBtn = document.getElementById("restart-btn");
 
     const FEATURES = {
-        gym: { name: "Gym Assistant (Kel_3)", icon: "💪" },
-        epl: { name: "EPL Match Predictor (Kel_2)", icon: "🏆" },
-        performance: { name: "Soccer Performance Prediction (Kel_5)", icon: "📈" },
-        injury: { name: "Sport Injury Risk Prediction (Kel_6)", icon: "🏥" },
-        object: { name: "Soccer Object Detection (Kel_7)", icon: "🔍" },
-        tackle: { name: "Tackle Offence Prediction (Kel_8)", icon: "⚽" },
-        event: { name: "Soccer Event Classifier (Kel_11)", icon: "📸" }
+        gym: { name: "Gym Assistant (Kel_3)", icon: "💪", desc: "Menganalisis pose latihan Anda (squat, curl, push-up) & menghitung repetisi secara live." },
+        epl: { name: "EPL Match Predictor (Kel_2)", icon: "🏆", desc: "Memproyeksikan probabilitas hasil pertandingan Liga Inggris berdasarkan performa sekuensial." },
+        performance_ann: { name: "Soccer Performance Prediction (Kel_1 - ANN)", icon: "📊", desc: "Prediksi rating performa pemain sepak bola berdasarkan posisinya menggunakan model ANN." },
+        performance: { name: "Soccer Performance Prediction (Kel_5 - LSTM)", icon: "📈", desc: "Proyeksi perkembangan rating karir pemain sepak bola di masa depan menggunakan model LSTM." },
+        injury_cnn: { name: "Sport Injury Risk Prediction (Kel_4 - LSTM)", icon: "⚡", desc: "Deteksi risiko tingkat kerawanan cedera atlet menggunakan arsitektur deep learning LSTM." },
+        injury: { name: "Sport Injury Risk Prediction (Kel_6 - ANN)", icon: "🏥", desc: "Menghitung probabilitas kerawanan cedera berdasarkan data medis/fisiologis menggunakan model ANN." },
+        object: { name: "Soccer Object Detection (Kel_7)", icon: "🔍", desc: "Mendeteksi posisi bola, pemain, wasit, dan kiper dalam gambar/video menggunakan YOLOv8." },
+        tackle: { name: "Tackle Offence Prediction (Kel_8)", icon: "⚽", desc: "Klasifikasi pelanggaran tackle (Foul/Clean) dari rekaman klip video menggunakan model LSTM." },
+        event_cnn: { name: "Soccer Event Classifier (Kel_10 - CNN)", icon: "🎯", desc: "Klasifikasi 7 jenis momen peristiwa sepak bola dari gambar menggunakan custom CNN." },
+        event: { name: "Soccer Event Classifier (Kel_11 - MobileNet)", icon: "📸", desc: "Klasifikasi 7 jenis momen peristiwa sepak bola dari gambar menggunakan MobileNetV2." }
     };
 
     let selectedFeature = null;
@@ -84,8 +87,14 @@ document.addEventListener("DOMContentLoaded", () => {
         
         Object.entries(FEATURES).forEach(([key, value]) => {
             const btn = document.createElement("button");
-            btn.className = "quick-reply-btn";
-            btn.innerHTML = `<span>${value.icon}</span> <span>${value.name}</span>`;
+            btn.className = "quick-reply-card";
+            btn.innerHTML = `
+                <div class="quick-reply-card-icon">${value.icon}</div>
+                <div class="quick-reply-card-content">
+                    <div class="quick-reply-card-title">${value.name}</div>
+                    <div class="quick-reply-card-desc">${value.desc}</div>
+                </div>
+            `;
             btn.addEventListener("click", () => handleFeatureSelection(key, value.name));
             container.appendChild(btn);
         });
@@ -220,6 +229,227 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Trigger webcam by default
             btnWebcam.click();
+        }
+        else if (selectedFeature === "performance_ann") {
+            appendSystemBubble(`
+                <div>
+                    <strong>Soccer Performance Prediction (ANN)</strong> memprediksi rating pemain berdasarkan statistik posisi (Kel_1).<br><br>
+                    Pilih Posisi Pemain:
+                    <select class="form-control" id="perf-ann-pos-${suffix}" style="margin-bottom:1rem;">
+                        <option value="attacker">Attacker (Penyerang)</option>
+                        <option value="midfielder">Midfielder (Gelandang)</option>
+                        <option value="defender">Defender (Bek)</option>
+                        <option value="gk">Goalkeeper (Kiper)</option>
+                    </select>
+                    <form class="bubble-form" id="perf-ann-form-${suffix}">
+                        <div id="perf-ann-sliders-${suffix}"></div>
+                        <button type="submit" class="btn btn-primary" style="margin-top:0.8rem; width:100%;">Prediksi Rating (ANN)</button>
+                    </form>
+                </div>
+            `);
+            const posSelect = document.getElementById(`perf-ann-pos-${suffix}`);
+            const slidersDiv = document.getElementById(`perf-ann-sliders-${suffix}`);
+            
+            const featureSets = {
+                attacker: [
+                    { id: 'potential', label: 'Potential', val: 75 },
+                    { id: 'finishing', label: 'Finishing', val: 70 },
+                    { id: 'positioning', label: 'Positioning', val: 72 },
+                    { id: 'shot_power', label: 'Shot Power', val: 68 },
+                    { id: 'dribbling', label: 'Dribbling', val: 74 },
+                    { id: 'ball_control', label: 'Ball Control', val: 73 },
+                    { id: 'acceleration', label: 'Acceleration', val: 75 },
+                    { id: 'sprint_speed', label: 'Sprint Speed', val: 76 },
+                    { id: 'agility', label: 'Agility', val: 72 },
+                    { id: 'reactions', label: 'Reactions', val: 70 },
+                    { id: 'crossing', label: 'Crossing', val: 62 },
+                    { id: 'heading_accuracy', label: 'Heading Accuracy', val: 60 },
+                    { id: 'volleys', label: 'Volleys', val: 58 }
+                ],
+                midfielder: [
+                    { id: 'potential', label: 'Potential', val: 76 },
+                    { id: 'short_passing', label: 'Short Passing', val: 75 },
+                    { id: 'long_passing', label: 'Long Passing', val: 70 },
+                    { id: 'vision', label: 'Vision', val: 72 },
+                    { id: 'ball_control', label: 'Ball Control', val: 74 },
+                    { id: 'dribbling', label: 'Dribbling', val: 70 },
+                    { id: 'stamina', label: 'Stamina', val: 75 },
+                    { id: 'reactions', label: 'Reactions', val: 71 },
+                    { id: 'crossing', label: 'Crossing', val: 68 },
+                    { id: 'interceptions', label: 'Interceptions', val: 60 },
+                    { id: 'standing_tackle', label: 'Standing Tackle', val: 58 },
+                    { id: 'finishing', label: 'Finishing', val: 62 },
+                    { id: 'positioning', label: 'Positioning', val: 65 }
+                ],
+                defender: [
+                    { id: 'potential', label: 'Potential', val: 74 },
+                    { id: 'standing_tackle', label: 'Standing Tackle', val: 75 },
+                    { id: 'sliding_tackle', label: 'Sliding Tackle', val: 72 },
+                    { id: 'marking', label: 'Marking', val: 74 },
+                    { id: 'interceptions', label: 'Interceptions', val: 70 },
+                    { id: 'heading_accuracy', label: 'Heading Accuracy', val: 68 },
+                    { id: 'strength', label: 'Strength', val: 78 },
+                    { id: 'aggression', label: 'Aggression', val: 75 },
+                    { id: 'reactions', label: 'Reactions', val: 68 },
+                    { id: 'jumping', label: 'Jumping', val: 72 }
+                ],
+                gk: [
+                    { id: 'potential', label: 'Potential', val: 75 },
+                    { id: 'gk_diving', label: 'GK Diving', val: 74 },
+                    { id: 'gk_handling', label: 'GK Handling', val: 72 },
+                    { id: 'gk_kicking', label: 'GK Kicking', val: 68 },
+                    { id: 'gk_positioning', label: 'GK Positioning', val: 73 },
+                    { id: 'gk_reflexes', label: 'GK Reflexes', val: 76 },
+                    { id: 'reactions', label: 'Reactions', val: 70 }
+                ]
+            };
+
+            function updateSliders() {
+                const pos = posSelect.value;
+                const list = featureSets[pos];
+                let html = '<div class="sliders-grid">';
+                list.forEach(f => {
+                    html += renderSlider(f.id, f.label, f.val, suffix);
+                });
+                html += '</div>';
+                slidersDiv.innerHTML = html;
+            }
+
+            posSelect.addEventListener("change", updateSliders);
+            updateSliders();
+            setupPerformanceAnnSubmit(suffix);
+        }
+        else if (selectedFeature === "injury_cnn") {
+            appendSystemBubble(`
+                <div>
+                    <strong>Injury Risk Prediction (LSTM)</strong> memprediksi potensi cedera pemain berdasarkan parameter biomekanik (Kel_4).<br><br>
+                    Isi statistik latihan Anda di bawah ini:
+                    <form class="bubble-form" id="injury-cnn-form-${suffix}" style="margin-top:1rem;">
+                        
+                        <div class="injury-section-card">
+                            <div class="injury-section-header">
+                                <span class="injury-section-title">Demografis & Fisik</span>
+                            </div>
+                            <div class="sliders-grid">
+                                <div class="form-group">
+                                    <label for="inj-cnn-age-${suffix}">Usia (Tahun)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-age-${suffix}" name="Age" min="18" max="40" placeholder="18 – 40" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-gender-${suffix}">Jenis Kelamin</label>
+                                    <select class="form-control" id="inj-cnn-gender-${suffix}" name="Gender" required>
+                                        <option value="" disabled selected>-- Pilih --</option>
+                                        <option value="1">Pria</option>
+                                        <option value="0">Wanita</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-height-${suffix}">Tinggi Badan (cm)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-height-${suffix}" name="Height_cm" placeholder="contoh: 175" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-weight-${suffix}">Berat Badan (kg)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-weight-${suffix}" name="Weight_kg" placeholder="contoh: 70" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="inj-cnn-bmi-${suffix}">BMI (Otomatis)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-bmi-${suffix}" name="BMI" placeholder="Dihitung otomatis" readonly style="background: rgba(37, 99, 235, 0.05); border-color: rgba(37, 99, 235, 0.2); color: var(--primary);">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="injury-section-card" style="margin-top:0.8rem;">
+                            <div class="injury-section-header">
+                                <span class="injury-section-title">Aktivitas & Intensitas</span>
+                            </div>
+                            <div class="sliders-grid">
+                                <div class="form-group">
+                                    <label for="inj-cnn-freq-${suffix}">Frekuensi/Minggu</label>
+                                    <input type="number" class="form-control" id="inj-cnn-freq-${suffix}" name="Training_Frequency" min="1" max="7" placeholder="1 – 7 kali" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-duration-${suffix}">Durasi (Menit)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-duration-${suffix}" name="Training_Duration" min="30" max="180" placeholder="30 – 180" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-warmup-${suffix}">Pemanasan (Menit)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-warmup-${suffix}" name="Warmup_Time" min="0" max="30" placeholder="0 – 30" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-intensity-${suffix}">Intensitas Latihan (1-10)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-intensity-${suffix}" name="Training_Intensity" step="any" min="1" max="10" placeholder="skala 1 – 10" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="injury-section-card" style="margin-top:0.8rem;">
+                            <div class="injury-section-header">
+                                <span class="injury-section-title">Medis & Kesehatan</span>
+                            </div>
+                            <div class="sliders-grid">
+                                <div class="form-group">
+                                    <label for="inj-cnn-sleep-${suffix}">Jam Tidur</label>
+                                    <input type="number" class="form-control" id="inj-cnn-sleep-${suffix}" name="Sleep_Hours" step="any" min="4" max="10" placeholder="4 – 10" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-flex-${suffix}">Skor Fleksibilitas</label>
+                                    <input type="number" class="form-control" id="inj-cnn-flex-${suffix}" name="Flexibility_Score" step="any" min="0" max="100" placeholder="0 – 100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-asym-${suffix}">Asimetri Otot (%)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-asym-${suffix}" name="Muscle_Asymmetry" step="any" min="0" max="100" placeholder="0 – 100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-recov-${suffix}">Waktu Recovery (s)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-recov-${suffix}" name="Recovery_Time" min="30" max="150" placeholder="30 – 150" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-history-${suffix}">Riwayat Cedera (0-5)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-history-${suffix}" name="Injury_History" min="0" max="5" placeholder="0 – 5" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inj-cnn-stress-${suffix}">Tingkat Stres (1-10)</label>
+                                    <input type="number" class="form-control" id="inj-cnn-stress-${suffix}" name="Stress_Level" min="1" max="10" placeholder="skala 1 – 10" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top:1rem; width:100%;">Hitung Risiko Cedera (LSTM)</button>
+                    </form>
+                </div>
+            `);
+            const heightInp = document.getElementById(`inj-cnn-height-${suffix}`);
+            const weightInp = document.getElementById(`inj-cnn-weight-${suffix}`);
+            const bmiInp = document.getElementById(`inj-cnn-bmi-${suffix}`);
+            
+            function calcBmi() {
+                const h = parseFloat(heightInp.value);
+                const w = parseFloat(weightInp.value);
+                if (h > 0 && w > 0) {
+                    bmiInp.value = (w / ((h / 100) ** 2)).toFixed(2);
+                } else {
+                    bmiInp.value = '';
+                }
+            }
+            if (heightInp && weightInp) {
+                heightInp.addEventListener("input", calcBmi);
+                weightInp.addEventListener("input", calcBmi);
+            }
+            setupInjuryCnnSubmit(suffix);
+        }
+        else if (selectedFeature === "event_cnn") {
+            appendSystemBubble(`
+                <div>
+                    <strong>Soccer Event Classifier (CNN)</strong> mengklasifikasi peristiwa pertandingan sepak bola dari sebuah foto menggunakan custom CNN model (Kel_10).<br><br>
+                    Silakan unggah foto aksi momen pertandingan sepak bola:
+                    <div class="upload-dropzone" id="event-cnn-dropzone-${suffix}">
+                        <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p>Klik atau Seret file foto ke sini</p>
+                        <input type="file" id="event-cnn-file-input-${suffix}" accept="image/*" style="display:none">
+                    </div>
+                </div>
+            `);
+            setupFileDropzone(`event-cnn-dropzone-${suffix}`, `event-cnn-file-input-${suffix}`, (file) => handleEventCnnUpload(file, suffix));
         }
         else if (selectedFeature === "epl") {
             appendSystemBubble(`
@@ -597,24 +827,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 appendSystemBubble(`❌ Gagal memproses video: ${data.error}`);
             } else {
-                appendSystemBubble(`
-                    <div>
-                        <div class="result-header">
-                            <span class="result-title">Hasil Analisis Latihan</span>
-                            <span class="result-badge badge-success">OK</span>
-                        </div>
-                        <div class="details-grid">
-                            <div class="detail-item"><strong>Jenis Latihan:</strong> ${data.exercise.toUpperCase()}</div>
-                            <div class="detail-item"><strong>Conf Model:</strong> ${data.confidence}%</div>
-                            <div class="detail-item"><strong>Jumlah Reps:</strong> <span style="font-size:1.2rem; color:var(--accent); font-weight:700;">${data.reps}</span></div>
-                            <div class="detail-item"><strong>Feedback:</strong> ${data.feedback}</div>
-                        </div>
-                        <div class="processed-media">
-                            <video src="${data.processed_video_url}" controls autoplay loop muted></video>
-                        </div>
-                        <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem; text-align:right;">Diproses ${data.total_frames_processed} frame</p>
-                    </div>
-                `);
+                appendSystemBubble(data.html);
             }
             appendQuickReplyButtons();
         })
@@ -665,7 +878,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(() => {});
         });
 
-        // Hide autocomplete suggestion box when clicking outside
         document.addEventListener("click", (e) => {
             if (e.target !== input) {
                 suggestionsBox.style.display = "none";
@@ -684,38 +896,15 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 appendSystemBubble(`❌ Gagal memproyeksikan performa: ${data.error}`);
             } else {
-                const chartId = "chart-" + uuid();
-                appendSystemBubble(`
-                    <div>
-                        <div class="result-header">
-                            <span class="result-title">${playerName} - Proyeksi Karir</span>
-                            <span class="result-badge badge-primary">${data.category}</span>
-                        </div>
-                        <div class="details-grid">
-                            <div class="detail-item"><strong>Posisi Ideal:</strong> ${data.insights.best_position}</div>
-                            <div class="detail-item"><strong>Rating Saat Ini:</strong> ${data.actual_ratings[data.actual_ratings.length - 1]}</div>
-                            <div class="detail-item"><strong>Rating Potensial:</strong> ${data.pred_ratings[data.pred_ratings.length - 1]}</div>
-                        </div>
-                        <div style="margin-top:0.8rem; font-size:0.88rem; border-left:3px solid var(--primary); padding-left:0.5rem; background:rgba(255,255,255,0.03); padding-top:0.3rem; padding-bottom:0.3rem;">
-                            <strong>Kebutuhan Latihan:</strong> ${data.insights.training_needs}
-                        </div>
-                        <div style="margin-top:0.5rem; font-size:0.88rem; border-left:3px solid var(--accent); padding-left:0.5rem; background:rgba(255,255,255,0.03); padding-top:0.3rem; padding-bottom:0.3rem;">
-                            <strong>Keputusan Strategis:</strong> ${data.insights.strategic_decision}
-                        </div>
-                        <div class="chart-container-inner">
-                            <canvas id="${chartId}"></canvas>
-                        </div>
-                    </div>
-                `);
+                appendSystemBubble(data.html);
                 
                 // Render Chart.js
                 setTimeout(() => {
-                    const ctx = document.getElementById(chartId).getContext('2d');
+                    const ctx = document.getElementById("chart-" + data.chart_id).getContext('2d');
                     
                     const labels = [...data.actual_years, ...data.pred_years];
                     const actualData = [...data.actual_ratings, ...Array(data.pred_ratings.length).fill(null)];
                     
-                    // Connect prediction starting point to actual latest
                     const predData = [
                         ...Array(data.actual_ratings.length - 1).fill(null),
                         data.actual_ratings[data.actual_ratings.length - 1],
@@ -749,11 +938,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: { labels: { color: '#475569' } }
+                                legend: { labels: { color: '#e2e8f0' } }
                             },
                             scales: {
-                                x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,0.05)' } },
-                                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,0.05)' }, min: 40, max: 100 }
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 40, max: 100 }
                             }
                         }
                     });
@@ -794,25 +983,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     appendSystemBubble(`❌ Gagal memprediksi rating: ${data.error}`);
                 } else {
-                    appendSystemBubble(`
-                        <div>
-                            <div class="result-header">
-                                <span class="result-title">Hasil Prediksi Rating</span>
-                                <span class="result-badge badge-primary">${data.category}</span>
-                            </div>
-                            <div class="details-grid">
-                                <div class="detail-item" style="grid-column: span 2; text-align:center;">
-                                    <div style="font-size:3rem; font-weight:800; color:var(--primary); line-height:1;">${data.rating}</div>
-                                    <p style="color:var(--text-secondary); margin-top:0.25rem;">${data.desc}</p>
-                                </div>
-                                <div class="detail-item"><strong>Posisi Ideal:</strong> ${data.insights.best_position}</div>
-                                <div class="detail-item"><strong>Prospek Karir:</strong> ${data.insights.potential}</div>
-                            </div>
-                            <div style="margin-top:0.8rem; font-size:0.88rem; border-left:3px solid var(--accent); padding-left:0.5rem; background:rgba(255,255,255,0.03); padding-top:0.3rem; padding-bottom:0.3rem;">
-                                <strong>Kebutuhan Latihan:</strong> ${data.insights.training_needs}
-                            </div>
-                        </div>
-                    `);
+                    appendSystemBubble(data.html);
                 }
                 appendQuickReplyButtons();
             })
@@ -859,25 +1030,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     appendSystemBubble(`❌ Gagal memprediksi risiko cedera: ${data.error}`);
                 } else {
-                    const badgeClass = data.risk_status.includes("Tinggi") ? "badge-danger" : "badge-success";
-                    const progressColor = data.risk_status.includes("Tinggi") ? "var(--danger)" : "var(--accent)";
-                    appendSystemBubble(`
-                        <div>
-                            <div class="result-header">
-                                <span class="result-title">Hasil Prediksi Risiko Cedera</span>
-                                <span class="result-badge ${badgeClass}">${data.risk_status}</span>
-                            </div>
-                            <div style="margin-bottom:1rem; text-align:center;">
-                                <div style="font-size:2.5rem; font-weight:800; color:${progressColor};">${data.prob_percent}%</div>
-                                <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; margin-top:0.4rem;">
-                                    <div style="width:${data.prob_percent}%; height:100%; background:${progressColor};"></div>
-                                </div>
-                            </div>
-                            <div style="font-size:0.9rem; line-height:1.6; border-left:3px solid ${progressColor}; padding-left:0.75rem; background:rgba(255,255,255,0.03); padding-top:0.5rem; padding-bottom:0.5rem;">
-                                <strong>Rekomendasi:</strong> ${data.recommendation}
-                            </div>
-                        </div>
-                    `);
+                    appendSystemBubble(data.html);
                 }
                 appendQuickReplyButtons();
             })
@@ -912,75 +1065,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 appendSystemBubble(`❌ Gagal mendeteksi objek: ${data.error}`);
             } else {
+                appendSystemBubble(data.html);
+                
                 if (data.file_type === "image") {
-                    const counts = { ball: 0, goalkeeper: 0, player: 0, referee: 0 };
-                    if (data.spatial_points) {
-                        data.spatial_points.forEach(pt => {
-                            counts[pt.class] = (counts[pt.class] || 0) + 1;
-                        });
-                    }
-                    const totalDetections = counts.ball + counts.goalkeeper + counts.player + counts.referee;
-                    const fieldId = "field-" + uuid();
-                    const chartId = "chart-" + uuid();
-
-                    appendSystemBubble(`
-                        <div>
-                            <div class="result-header">
-                                <span class="result-title">Hasil Deteksi Gambar (Kel_7)</span>
-                                <span class="result-badge badge-success">Selesai</span>
-                            </div>
-                            <div class="details-grid" style="margin-bottom:0.8rem;">
-                                <div class="detail-item"><strong>Pemain:</strong> ${counts.player}</div>
-                                <div class="detail-item"><strong>Bola:</strong> ${counts.ball}</div>
-                                <div class="detail-item"><strong>Kiper:</strong> ${counts.goalkeeper}</div>
-                                <div class="detail-item"><strong>Wasit:</strong> ${counts.referee}</div>
-                                <div class="detail-item" style="grid-column: span 2;"><strong>Total Deteksi:</strong> ${totalDetections}</div>
-                            </div>
-                            <div class="processed-media">
-                                <img src="${data.annotated_image_url}" alt="Hasil Deteksi YOLO">
-                            </div>
-                            <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                                <a href="${data.annotated_image_url}" download="hasil_deteksi.jpg" class="btn btn-secondary btn-sm" style="padding: 0.4rem 1rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                    Unduh Gambar
-                                </a>
-                            </div>
-                            <div style="margin-top: 1.25rem;">
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 600;">▸ PETA POSISI TAKTIS (SCATTER MAP)</p>
-                                <div class="field-container">
-                                    <div class="soccer-field" id="${fieldId}">
-                                        <div class="field-center-line"></div>
-                                        <div class="field-center-circle"></div>
-                                        <div class="field-center-dot"></div>
-                                        <div class="field-box-left"></div>
-                                        <div class="field-box-right"></div>
-                                        <div class="field-goal-left"></div>
-                                        <div class="field-goal-right"></div>
-                                        <div class="heatmap-tint"></div>
-                                        <span class="map-coord-label" style="left:4px; top:4px;">0,0</span>
-                                        <span class="map-coord-label" style="right:4px; top:4px;">100,0</span>
-                                        <span class="map-coord-label" style="left:4px; bottom:4px;">0,100</span>
-                                        <span class="map-coord-label" style="right:4px; bottom:4px;">100,100</span>
-                                    </div>
-                                    <div class="field-legend">
-                                        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Pemain</div>
-                                        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Bola</div>
-                                        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Kiper</div>
-                                        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Wasit</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="margin-top: 1.25rem;">
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 600;">▸ SEBARAN DISTRIBUSI OBJEK</p>
-                                <div class="chart-container-inner" style="height: 180px;">
-                                    <canvas id="${chartId}"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-
                     setTimeout(() => {
-                        const fieldEl = document.getElementById(fieldId);
+                        const fieldEl = document.getElementById("field-" + data.suffix);
                         if (fieldEl && data.spatial_points) {
                             data.spatial_points.forEach(pt => {
                                 const dot = document.createElement('div');
@@ -997,7 +1086,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             });
                         }
 
-                        const chartCanvas = document.getElementById(chartId);
+                        const chartCanvas = document.getElementById("chart-" + data.suffix);
                         if (chartCanvas) {
                             const ctx = chartCanvas.getContext('2d');
                             new Chart(ctx, {
@@ -1006,9 +1095,14 @@ document.addEventListener("DOMContentLoaded", () => {
                                     labels: ['BALL', 'KEEPER', 'PLAYER', 'REFEREE'],
                                     datasets: [{
                                         label: 'Detections',
-                                        data: [counts.ball, counts.goalkeeper, counts.player, counts.referee],
-                                        backgroundColor: ['rgba(16, 185, 129, 0.2)', 'rgba(245, 158, 11, 0.2)', 'rgba(59, 130, 246, 0.2)', 'rgba(239, 68, 68, 0.2)'],
-                                        borderColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+                                        data: [
+                                            data.ball_count,
+                                            data.goalkeeper_count,
+                                            data.player_count,
+                                            data.referee_count
+                                        ],
+                                        backgroundColor: ['rgba(200, 255, 0, 0.2)', 'rgba(255, 149, 0, 0.2)', 'rgba(0, 229, 255, 0.2)', 'rgba(255, 45, 85, 0.2)'],
+                                        borderColor: ['#C8FF00', '#FF9500', '#00E5FF', '#FF2D55'],
                                         borderWidth: 1,
                                         borderRadius: 4,
                                     }]
@@ -1033,29 +1127,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             });
                         }
                     }, 100);
-                } else {
-                    appendSystemBubble(`
-                        <div>
-                            <div class="result-header">
-                                <span class="result-title">Hasil Tracking Video</span>
-                                <span class="result-badge badge-success">Selesai</span>
-                            </div>
-                            <div class="details-grid" style="margin-bottom:0.8rem;">
-                                <div class="detail-item"><strong>Jumlah ID Pemain Unik:</strong> ${data.total_unique_players}</div>
-                                <div class="detail-item"><strong>Model Tracker:</strong> ByteTrack</div>
-                            </div>
-                            <div class="processed-media">
-                                <video src="${data.annotated_video_url}" controls autoplay loop muted></video>
-                            </div>
-                            <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                                <a href="${data.annotated_video_url}" download="hasil_tracking.mp4" class="btn btn-secondary btn-sm" style="padding: 0.4rem 1rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                    Unduh Video
-                                </a>
-                            </div>
-                            <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem; text-align:right;">Diproses ${data.total_frames_processed} frame</p>
-                        </div>
-                    `);
                 }
             }
             appendQuickReplyButtons();
@@ -1091,40 +1162,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error || !data.success) {
                     appendSystemBubble(`❌ Gagal menganalisis tackle: ${data.error || "Format tidak valid"}`);
                 } else {
-                    const isOffence = data.label === "Offense";
-                    const badgeClass = isOffence ? "badge-danger" : "badge-success";
-                    const color = isOffence ? "var(--danger)" : "var(--accent)";
-                    
-                    let keyframesHtml = "";
-                    if (data.frames && data.frames.length > 0) {
-                        keyframesHtml = `
-                            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:1rem; margin-bottom:0.4rem;">Galeri Cuplikan Keyframe:</p>
-                            <div class="keyframes-strip">
-                                ${data.frames.map(f => `
-                                    <div class="keyframe-img-box">
-                                        <img src="data:image/jpeg;base64,${f}" alt="Keyframe">
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
-                    }
-
-                    appendSystemBubble(`
-                        <div>
-                            <div class="result-header">
-                                <span class="result-title">Deteksi Tackle Pelanggaran</span>
-                                <span class="result-badge ${badgeClass}">${data.label}</span>
-                            </div>
-                            <div style="margin-bottom:1rem; text-align:center;">
-                                <div style="font-size:2.2rem; font-weight:800; color:${color};">${data.confidence.toFixed(1)}%</div>
-                                <p style="font-size:0.85rem; color:var(--text-secondary);">Keyakinan Model (Threshold: ${data.threshold})</p>
-                            </div>
-                            <div style="font-size:0.9rem; line-height:1.6; border-left:3px solid ${color}; padding-left:0.75rem; background:rgba(255,255,255,0.03); padding-top:0.4rem; padding-bottom:0.4rem;">
-                                <strong>Hasil Klasifikasi:</strong> ${isOffence ? "Tackle terdeteksi sebagai PELANGGARAN. Kurang sportif atau terlambat memotong bola." : "Tackle Bersih (TIDAK ADA PELANGGARAN). Perebutan bola dinilai bersih."}
-                            </div>
-                            ${keyframesHtml}
-                        </div>
-                    `);
+                    appendSystemBubble(data.html);
                 }
                 appendQuickReplyButtons();
             })
@@ -1153,28 +1191,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error || !data.success) {
                 appendSystemBubble(`❌ Gagal menganalisis gambar tackle: ${data.error || "Format salah"}`);
             } else {
-                const isFoul = data.label === "Foul Tackle";
-                const badgeClass = isFoul ? "badge-danger" : "badge-success";
-                const color = isFoul ? "var(--danger)" : "var(--accent)";
-
-                appendSystemBubble(`
-                    <div>
-                        <div class="result-header">
-                            <span class="result-title">Deteksi Tackle Gambar (Kel_9)</span>
-                            <span class="result-badge ${badgeClass}">${data.label}</span>
-                        </div>
-                        <div style="margin-bottom:1rem; text-align:center;">
-                            <div style="font-size:2.2rem; font-weight:800; color:${color};">${data.confidence.toFixed(1)}%</div>
-                            <p style="font-size:0.85rem; color:var(--text-secondary);">Keyakinan Model</p>
-                        </div>
-                        <div style="font-size:0.9rem; line-height:1.6; border-left:3px solid ${color}; padding-left:0.75rem; background:rgba(255,255,255,0.03); padding-top:0.4rem; padding-bottom:0.4rem; margin-bottom:1rem;">
-                            <strong>Hasil Analisis:</strong> ${isFoul ? "Tackle terdeteksi sebagai PELANGGARAN. Kaki terangkat tinggi atau menyentuh fisik lawan sebelum bola." : "Tackle Bersih (TIDAK ADA PELANGGARAN). Kontak kaki langsung menyapu bola."}
-                        </div>
-                        <div class="processed-media">
-                            <img src="${data.image_url}" alt="Tackle Image Analysis">
-                        </div>
-                    </div>
-                `);
+                appendSystemBubble(data.html);
             }
             appendQuickReplyButtons();
         })
@@ -1205,26 +1222,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error || !data.success) {
                 appendSystemBubble(`❌ Gagal menganalisis event gambar: ${data.error || "Format salah"}`);
             } else {
-                const chartId = "chart-" + uuid();
-                appendSystemBubble(`
-                    <div>
-                        <div class="result-header">
-                            <span class="result-title">Klasifikasi Peristiwa Momen</span>
-                            <span class="result-badge badge-primary">${data.event.toUpperCase()}</span>
-                        </div>
-                        <div style="margin-bottom:0.8rem; text-align:center;">
-                            <div style="font-size:2.2rem; font-weight:800; color:var(--primary);">${data.confidence}%</div>
-                            <p style="font-size:0.85rem; color:var(--text-secondary);">Tingkat Keyakinan</p>
-                        </div>
-                        <div class="chart-container-inner" style="height: 180px;">
-                            <canvas id="${chartId}"></canvas>
-                        </div>
-                    </div>
-                `);
+                appendSystemBubble(data.html);
 
                 // Render Chart.js Horizontal Bar Chart
                 setTimeout(() => {
-                    const ctx = document.getElementById(chartId).getContext('2d');
+                    const ctx = document.getElementById("chart-" + data.suffix).getContext('2d');
                     
                     const events = Object.keys(data.all_predictions);
                     const scores = Object.values(data.all_predictions);
@@ -1287,102 +1289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error || !data.success) {
                     appendSystemBubble(`❌ Gagal memprediksi hasil pertandingan: ${data.error || "Terjadi kesalahan"}`);
                 } else {
-                    const prediction = data.prediction;
-                    let badgeClass = "badge-success";
-                    let color = "var(--accent)";
-                    if (prediction === "Kalah") {
-                        badgeClass = "badge-danger";
-                        color = "var(--danger)";
-                    } else if (prediction === "Seri") {
-                        badgeClass = "badge-warning";
-                        color = "var(--warning)";
-                    }
-                    
-                    let recentHtml = "";
-                    if (data.recent_matches && data.recent_matches.length > 0) {
-                        recentHtml = `
-                            <div style="margin-top:1.2rem;">
-                                <p style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.4rem; text-transform:uppercase;">
-                                    5 Pertandingan Terakhir (Input Model):
-                                </p>
-                                <div style="overflow-x:auto;">
-                                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:center;">
-                                        <thead>
-                                            <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-secondary);">
-                                                <th style="padding:0.4rem; text-align:left;">Tanggal</th>
-                                                <th style="padding:0.4rem;">Cetak</th>
-                                                <th style="padding:0.4rem;">Kebobol</th>
-                                                <th style="padding:0.4rem;">SOT</th>
-                                                <th style="padding:0.4rem;">Hasil</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${data.recent_matches.map(m => {
-                                                let resColor = "var(--accent)";
-                                                if (m.result === "Kalah") resColor = "var(--danger)";
-                                                else if (m.result === "Seri") resColor = "var(--warning)";
-                                                return `
-                                                    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                                                        <td style="padding:0.4rem; text-align:left; color:var(--text-secondary);">${m.date}</td>
-                                                        <td style="padding:0.4rem; font-weight:700; color:#3b82f6;">${m.goals_for}</td>
-                                                        <td style="padding:0.4rem; font-weight:700; color:#ef4444;">${m.goals_against}</td>
-                                                        <td style="padding:0.4rem;">${m.sot}</td>
-                                                        <td style="padding:0.4rem; font-weight:700; color:${resColor};">${m.result}</td>
-                                                    </tr>
-                                                `;
-                                            }).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    appendSystemBubble(`
-                        <div>
-                            <div class="result-header">
-                                <span class="result-title">${data.team} - Prediksi EPL</span>
-                                <span class="result-badge ${badgeClass}">${prediction}</span>
-                            </div>
-                            
-                            <div style="margin-bottom:1.2rem; text-align:center;">
-                                <div style="font-size:1.8rem; font-weight:800; color:${color};">Akan ${prediction.toUpperCase()}</div>
-                                <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.2rem;">Prediksi hasil pertandingan selanjutnya</p>
-                            </div>
-                            
-                            <div class="prob-list" style="display:flex; flex-direction:column; gap:0.6rem;">
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
-                                        <span>Menang</span>
-                                        <strong>${data.prob_win}%</strong>
-                                    </div>
-                                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
-                                        <div style="width:${data.prob_win}%; height:100%; background:var(--accent); transition:width 1s;"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
-                                        <span>Seri</span>
-                                        <strong>${data.prob_draw}%</strong>
-                                    </div>
-                                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
-                                        <div style="width:${data.prob_draw}%; height:100%; background:var(--warning); transition:width 1s;"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
-                                        <span>Kalah</span>
-                                        <strong>${data.prob_loss}%</strong>
-                                    </div>
-                                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
-                                        <div style="width:${data.prob_loss}%; height:100%; background:var(--danger); transition:width 1s;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            ${recentHtml}
-                        </div>
-                    `);
+                    appendSystemBubble(data.html);
                 }
                 appendQuickReplyButtons();
             })
@@ -1391,6 +1298,120 @@ document.addEventListener("DOMContentLoaded", () => {
                 appendSystemBubble(`❌ Kesalahan server: ${err.message}`);
                 appendQuickReplyButtons();
             });
+        });
+    }
+
+    // -------------------------------------------------------------
+    // NEW SUBMIT HANDLERS FOR KEL 1, 4, 10
+    // -------------------------------------------------------------
+    function setupPerformanceAnnSubmit(suffix) {
+        const form = document.getElementById(`perf-ann-form-${suffix}`);
+        const posSelect = document.getElementById(`perf-ann-pos-${suffix}`);
+        if (!form || !posSelect) return;
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            appendUserBubble(`Mengirim statistik parameter manual (${posSelect.value})`);
+            const loader = appendLoaderBubble();
+
+            const values = { position: posSelect.value };
+            const inputs = form.querySelectorAll("input[type='range']");
+            inputs.forEach(i => {
+                values[i.name] = parseInt(i.value);
+            });
+
+            fetch("/api/predict/performance_ann", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values)
+            })
+            .then(res => res.json())
+            .then(data => {
+                removeLoader(loader);
+                if (data.error || !data.success) {
+                    appendSystemBubble(`❌ Gagal memprediksi rating: ${data.error || "Terjadi kesalahan"}`);
+                } else {
+                    appendSystemBubble(data.html);
+                }
+                appendQuickReplyButtons();
+            })
+            .catch(err => {
+                removeLoader(loader);
+                appendSystemBubble(`❌ Terjadi kesalahan: ${err.message}`);
+                appendQuickReplyButtons();
+            });
+        });
+    }
+
+    function setupInjuryCnnSubmit(suffix) {
+        const form = document.getElementById(`injury-cnn-form-${suffix}`);
+        if (!form) return;
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            appendUserBubble("Mengirim parameter biomekanik tubuh");
+            const loader = appendLoaderBubble();
+
+            const values = {};
+            const inputs = form.querySelectorAll("input");
+            inputs.forEach(i => {
+                if (i.value !== "") {
+                    values[i.name] = parseFloat(i.value);
+                }
+            });
+            const selects = form.querySelectorAll("select");
+            selects.forEach(s => {
+                values[s.name] = parseInt(s.value);
+            });
+
+            fetch("/api/predict/injury_cnn", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values)
+            })
+            .then(res => res.json())
+            .then(data => {
+                removeLoader(loader);
+                if (data.error || !data.success) {
+                    appendSystemBubble(`❌ Gagal memprediksi risiko: ${data.error || "Terjadi kesalahan"}`);
+                } else {
+                    appendSystemBubble(data.html);
+                }
+                appendQuickReplyButtons();
+            })
+            .catch(err => {
+                removeLoader(loader);
+                appendSystemBubble(`❌ Kesalahan server: ${err.message}`);
+                appendQuickReplyButtons();
+            });
+        });
+    }
+
+    function handleEventCnnUpload(file, suffix) {
+        appendUserBubble(`Mengunggah foto aksi: ${file.name}`);
+        const loader = appendLoaderBubble();
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("/api/predict/soccer_event_cnn", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            removeLoader(loader);
+            if (data.error || !data.success) {
+                appendSystemBubble(`❌ Gagal mengklasifikasi momen: ${data.error || "Terjadi kesalahan"}`);
+            } else {
+                appendSystemBubble(data.html);
+            }
+            appendQuickReplyButtons();
+        })
+        .catch(err => {
+            removeLoader(loader);
+            appendSystemBubble(`❌ Kesalahan server: ${err.message}`);
+            appendQuickReplyButtons();
         });
     }
 

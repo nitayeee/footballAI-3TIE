@@ -13,6 +13,11 @@ from services.tackle_offence import predict_tackle_offence
 from services.soccer_event import classify_soccer_event
 from services.epl_predict import get_teams, predict_epl_match
 
+# Group 1, 4, 10 integrations
+from services.performance_ann import predict_performance_ann
+from services.injury_risk_cnn import predict_injury_cnn
+from services.soccer_event_cnn import classify_event_cnn
+
 app = Flask(__name__)
 app.secret_key = "sistem_besar_deep_learning_secret_key"
 
@@ -39,7 +44,17 @@ def save_file(uploaded_file, category=""):
 # -------------------------------------------------------------
 @app.route('/')
 def landing_page():
-    return render_template('landing.html')
+    foto_dir = os.path.join(app.root_path, 'static', 'foto')
+    photos = []
+    if os.path.exists(foto_dir):
+        valid_exts = ('.png', '.jpg', '.jpeg', '.heic', '.webp', '.gif', '.tiff')
+        for f in os.listdir(foto_dir):
+            if os.path.isfile(os.path.join(foto_dir, f)):
+                ext = os.path.splitext(f)[1].lower()
+                if ext in valid_exts or f.lower() == 'isan':
+                    photos.append(f)
+    photos.sort()
+    return render_template('landing.html', photos=photos)
 
 @app.route('/chat')
 def chat_page():
@@ -90,6 +105,11 @@ def api_gym_assistant():
             return jsonify({"error": "Failed to process video"}), 500
             
         metrics["processed_video_url"] = f"/static/uploads/{output_filename}"
+        
+        # Render python result HTML
+        html = render_template('results/kel3.html', **metrics)
+        metrics["html"] = html
+        
         return jsonify(metrics)
         
     except Exception as e:
@@ -121,6 +141,9 @@ def api_performance_manual():
     data = request.json or {}
     try:
         result = predict_manual(data)
+        if result.get("success"):
+            html = render_template('results/kel5_manual.html', **result)
+            result["html"] = html
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -132,6 +155,11 @@ def api_performance_player(player_id):
         result = predict_player_career(player_id, years_ahead)
         if 'error' in result:
             return jsonify(result), 400
+        # Generate chart_id
+        chart_id = uuid.uuid4().hex[:8]
+        result["chart_id"] = chart_id
+        html = render_template('results/kel5_player.html', **result)
+        result["html"] = html
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -144,6 +172,8 @@ def api_injury_risk():
     data = request.json or {}
     try:
         result = predict_injury_risk(data)
+        html = render_template('results/kel6.html', **result)
+        result["html"] = html
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -178,6 +208,14 @@ def api_object_detection():
                 
             result["file_type"] = "image"
             result["annotated_image_url"] = f"/static/uploads/{output_filename}"
+            
+            # Render templates results/kel7_image.html
+            suffix = uuid.uuid4().hex[:8]
+            result["suffix"] = suffix
+            result["image_url"] = result["annotated_image_url"]
+            html = render_template('results/kel7_image.html', **result)
+            result["html"] = html
+            
             return jsonify(result)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -201,6 +239,11 @@ def api_object_detection():
                 
             result["file_type"] = "video"
             result["annotated_video_url"] = f"/static/uploads/{output_filename}"
+            
+            # Render templates results/kel7_video.html
+            html = render_template('results/kel7_video.html', **result)
+            result["html"] = html
+            
             return jsonify(result)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -241,6 +284,10 @@ def api_tackle_offence():
                 except PermissionError:
                     pass
                     
+        if result.get("success"):
+            html = render_template('results/kel8.html', **result)
+            result["html"] = html
+            
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -267,6 +314,10 @@ def api_tackle_image():
             
         filename = os.path.basename(input_path)
         result["image_url"] = f"/static/uploads/{filename}"
+        
+        html = render_template('results/kel9.html', **result)
+        result["html"] = html
+        
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -286,11 +337,22 @@ def api_soccer_event():
         
     try:
         result = classify_soccer_event(input_path)
-        if os.path.exists(input_path):
-            os.unlink(input_path)
+        
+        if result.get("success"):
+            suffix = uuid.uuid4().hex[:8]
+            result["suffix"] = suffix
+            filename = os.path.basename(input_path)
+            result["image_url"] = f"/static/uploads/{filename}"
+            html = render_template('results/kel11.html', **result)
+            result["html"] = html
+        else:
+            if os.path.exists(input_path):
+                os.unlink(input_path)
             
         return jsonify(result)
     except Exception as e:
+        if os.path.exists(input_path):
+            os.unlink(input_path)
         return jsonify({"error": str(e)}), 500
 
 # -------------------------------------------------------------
@@ -312,6 +374,68 @@ def api_epl_match():
         return jsonify({"error": "Nama tim harus disertakan"}), 400
     try:
         result = predict_epl_match(team)
+        if result.get("success"):
+            html = render_template('results/kel2.html', **result)
+            result["html"] = html
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------------------------------------------
+# API: Group 1 - Performance ANN Predictor
+# -------------------------------------------------------------
+@app.route('/api/predict/performance_ann', methods=['POST'])
+def api_performance_ann():
+    data = request.json or {}
+    position = data.get('position', '').strip().lower()
+    if not position:
+        return jsonify({"error": "Posisi harus disertakan"}), 400
+    try:
+        result = predict_performance_ann(position, data)
+        if result.get("success"):
+            html = render_template('results/kel1.html', **result)
+            result["html"] = html
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------------------------------------------
+# API: Group 4 - Sport Injury Risk CNN
+# -------------------------------------------------------------
+@app.route('/api/predict/injury_cnn', methods=['POST'])
+def api_injury_cnn():
+    data = request.json or {}
+    try:
+        result = predict_injury_cnn(data)
+        if result.get("success"):
+            html = render_template('results/kel4.html', **result)
+            result["html"] = html
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------------------------------------------
+# API: Group 10 - Soccer Event CNN
+# -------------------------------------------------------------
+@app.route('/api/predict/soccer_event_cnn', methods=['POST'])
+def api_soccer_event_cnn():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+        
+    file = request.files['file']
+    input_path = save_file(file, "event_cnn_in")
+    if not input_path:
+        return jsonify({"error": "Failed to save file"}), 400
+        
+    try:
+        result = classify_event_cnn(input_path)
+        if result.get("success"):
+            filename = os.path.basename(input_path)
+            result["image_url"] = f"/static/uploads/{filename}"
+            html = render_template('results/kel10.html', **result)
+            result["html"] = html
+            # Note: We do not unlink input_path here because we are displaying it!
+            
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -26,12 +26,19 @@
 
     <!-- HERO SECTION -->
     <header id="home" class="hero">
-        <div class="hero-content">
-            <h1>Platform Deep Learning Terpadu Olahraga & Sepak Bola</h1>
-            <p>Konsolidasi 7 kecerdasan deep learning canggih dalam satu asisten interaktif. Mulai dari estimasi pose, deteksi kejadian lapangan, hingga analisis risiko cedera atlet secara instan.</p>
-            <div class="hero-btns">
-                <a href="/chat" class="btn btn-primary">Coba Sekarang</a>
-                <a href="#about" class="btn btn-secondary">Pelajari Lebih Lanjut</a>
+        <div class="hero-grid">
+            <div class="hero-text-side">
+                <h1>Platform Deep Learning Terpadu Olahraga & Sepak Bola</h1>
+                <p>Konsolidasi 7 kecerdasan deep learning canggih dalam satu asisten interaktif. Mulai dari estimasi pose, deteksi kejadian lapangan, hingga analisis risiko cedera atlet secara instan.</p>
+                <div class="hero-btns">
+                    <a href="/chat" class="btn btn-primary">Coba Sekarang</a>
+                    <a href="#about" class="btn btn-secondary">Pelajari Lebih Lanjut</a>
+                </div>
+            </div>
+            <div class="hero-image-side">
+                <div class="hero-img-wrapper">
+                    <img src="/static/foto/hero_soccer_ball.png" alt="High-tech Soccer Ball Analytics" class="hero-img">
+                </div>
             </div>
         </div>
     </header>
@@ -141,53 +148,38 @@
     </section>
 
     <!-- OUR TEAM SECTION -->
-    <section id="team" class="section">
-        <div class="section-header">
+    <section id="team" class="section" style="overflow: hidden; padding: 6rem 0;">
+        <div class="section-header" style="padding: 0 5%; margin-bottom: 3rem;">
             <h2>Tim Kami</h2>
-            <p>Kolaborasi 7 kelompok dalam pengembangan Sistem Besar Deep Learning.</p>
+            <p>Kolaborasi mahasiswa dalam pengembangan proyek Sistem Besar Deep Learning.</p>
         </div>
-        <div class="team-grid">
-            <!-- Kelompok 2 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 2</div>
-                <h3>EPL Match Outcome</h3>
-                <p>LSTM Classifier</p>
-            </div>
-            <!-- Kelompok 3 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 3</div>
-                <h3>Gym Assistant</h3>
-                <p>YOLOv8 Pose & Class</p>
-            </div>
-            <!-- Kelompok 5 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 5</div>
-                <h3>Performance Prediction</h3>
-                <p>LSTM Regressor</p>
-            </div>
-            <!-- Kelompok 6 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 6</div>
-                <h3>Injury Risk</h3>
-                <p>Artificial Neural Network</p>
-            </div>
-            <!-- Kelompok 7 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 7</div>
-                <h3>Object Detection</h3>
-                <p>YOLOv8 Detector</p>
-            </div>
-            <!-- Kelompok 8 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 8</div>
-                <h3>Tackle Offence</h3>
-                <p>MobileNetV2 + LSTM</p>
-            </div>
-            <!-- Kelompok 11 -->
-            <div class="team-card glass">
-                <div class="team-avatar">Kel 11</div>
-                <h3>Event Classifier</h3>
-                <p>MobileNetV2 Class</p>
+        
+        <div class="team-marquee">
+            <div class="marquee-track">
+                <!-- First set of photos -->
+                {% for photo in photos %}
+                <div class="marquee-card">
+                    <div class="marquee-avatar">
+                        <img src="/static/foto/{{ photo }}" alt="{{ photo.split('.')[0] }}" loading="lazy">
+                    </div>
+                    <div class="marquee-info">
+                        <h3>{{ photo.split('.')[0]|title }}</h3>
+                        <p>Team Member</p>
+                    </div>
+                </div>
+                {% endfor %}
+                <!-- Duplicate set for seamless looping -->
+                {% for photo in photos %}
+                <div class="marquee-card">
+                    <div class="marquee-avatar">
+                        <img src="/static/foto/{{ photo }}" alt="{{ photo.split('.')[0] }}" loading="lazy">
+                    </div>
+                    <div class="marquee-info">
+                        <h3>{{ photo.split('.')[0]|title }}</h3>
+                        <p>Team Member</p>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </section>
