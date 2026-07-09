@@ -1,7 +1,7 @@
 import os
 import joblib
 import numpy as np
-import tensorflow as tf
+import onnxruntime as ort
 
 # Global references (lazy loaded)
 model = None
@@ -9,20 +9,21 @@ scaler = None
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KEL4_DIR = os.path.join(BASE_DIR, "Kel_4")
+MODELS_DIR = os.path.join(BASE_DIR, "sistem_besar_dl", "models")
 
 def load_resources():
     global model, scaler
     if model is not None:
         return
         
-    model_file = os.path.join(KEL4_DIR, "Model", "akurasi88.h5")
+    model_file = os.path.join(MODELS_DIR, "kel4_injury.onnx")
     scaler_file = os.path.join(KEL4_DIR, "scaler.pkl")
     
     if os.path.exists(model_file) and os.path.exists(scaler_file):
         try:
-            model = tf.keras.models.load_model(model_file)
+            model = ort.InferenceSession(model_file)
             scaler = joblib.load(scaler_file)
-            print("[Kel_4] Model and scaler loaded successfully.")
+            print("[Kel_4] ONNX Model and scaler loaded successfully.")
         except Exception as e:
             print(f"[Kel_4] Error loading resources: {e}")
             model = None
@@ -79,7 +80,9 @@ def predict_injury_cnn(data):
     # Reshape for LSTM model (same shape check as in kel4.py)
     lstm_input = scaled.reshape(1, scaled.shape[1], 1)
     
-    prediction = model.predict(lstm_input, verbose=0)
+    # Run prediction using ONNX runtime
+    input_name = model.get_inputs()[0].name
+    prediction = model.run(None, {input_name: lstm_input.astype(np.float32)})[0]
     result = np.argmax(prediction, axis=1)[0]
     
     output = "Risiko Cedera Rendah" if result == 0 else "Risiko Cedera Tinggi"

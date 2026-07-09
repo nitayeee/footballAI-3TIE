@@ -19,9 +19,10 @@ def load_resources():
     global model
     if model is not None:
         return
-    model_path = os.path.join(KEL7_DIR, "weights", "best.pt")
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    model_path = os.path.join(models_dir, "kel7_yolov8.onnx")
     if os.path.exists(model_path):
-        model = YOLO(model_path)
+        model = YOLO(model_path, task="detect")
 
 def detect_in_image(image_path, output_image_path, conf_threshold=0.4):
     load_resources()

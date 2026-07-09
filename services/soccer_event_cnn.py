@@ -1,14 +1,14 @@
 import os
-import pickle
 import numpy as np
 from PIL import Image
+import onnxruntime as ort
 
 # Global references (lazy loaded)
 model = None
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-KEL10_DIR = os.path.join(BASE_DIR, "Kel_10")
-MODEL_PATH = os.path.join(KEL10_DIR, "best_model_final.pkl")
+MODELS_DIR = os.path.join(BASE_DIR, "sistem_besar_dl", "models")
+MODEL_PATH = os.path.join(MODELS_DIR, "kel10_soccer_event.onnx")
 IMG_SIZE = (128, 128)
 
 CLASS_NAMES = [
@@ -28,14 +28,13 @@ def load_resources():
         
     if os.path.exists(MODEL_PATH):
         try:
-            with open(MODEL_PATH, "rb") as f:
-                model = pickle.load(f)
-            print("[Kel_10] Pickle model loaded successfully.")
+            model = ort.InferenceSession(MODEL_PATH)
+            print("[Kel_10] ONNX model loaded successfully.")
         except Exception as e:
             print(f"[Kel_10] Error loading model: {e}")
             model = None
     else:
-        print(f"[Kel_10] Model file not found at: {MODEL_PATH}")
+        print(f"[Kel_10] ONNX Model file not found at: {MODEL_PATH}")
         model = None
 
 def preprocess_image(img_path):
@@ -52,7 +51,10 @@ def classify_event_cnn(image_path):
         
     try:
         img_array = preprocess_image(image_path)
-        pred = model.predict(img_array)
+        
+        # Run prediction using ONNX runtime
+        input_name = model.get_inputs()[0].name
+        pred = model.run(None, {input_name: img_array.astype(np.float32)})[0]
         pred = np.array(pred)
         
         if len(pred.shape) == 2:

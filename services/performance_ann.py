@@ -1,7 +1,7 @@
 import os
 import joblib
 import numpy as np
-import tensorflow as tf
+import onnxruntime as ort
 
 # Global references (lazy loaded)
 MODELS = {}
@@ -9,6 +9,7 @@ SCALERS = {}
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KEL1_BACKEND_DIR = os.path.join(BASE_DIR, "Kel_1", "Backend")
+MODELS_DIR = os.path.join(BASE_DIR, "sistem_besar_dl", "models")
 
 POSITION_FEATURES = {
     "attacker": [
@@ -36,14 +37,14 @@ def load_resources(position):
     if position in MODELS and position in SCALERS:
         return
         
-    model_file = os.path.join(KEL1_BACKEND_DIR, f"model_{position}_ann.h5")
+    model_file = os.path.join(MODELS_DIR, f"kel1_{position}.onnx")
     scaler_file = os.path.join(KEL1_BACKEND_DIR, f"scaler_{position}.pkl")
     
     if os.path.exists(model_file) and os.path.exists(scaler_file):
         try:
-            MODELS[position] = tf.keras.models.load_model(model_file, compile=False)
+            MODELS[position] = ort.InferenceSession(model_file)
             SCALERS[position] = joblib.load(scaler_file)
-            print(f"[Kel_1] Model and scaler loaded successfully for position: {position}")
+            print(f"[Kel_1] ONNX Model and scaler loaded successfully for position: {position}")
         except Exception as e:
             print(f"[Kel_1] Error loading resources for {position}: {e}")
             MODELS[position] = None
@@ -79,7 +80,10 @@ def predict_performance_ann(position, form_data):
         
     input_array = np.array(values, dtype=np.float32).reshape(1, -1)
     scaled = scaler.transform(input_array)
-    pred = model.predict(scaled, verbose=0)
+    
+    # Run prediction using ONNX runtime
+    input_name = model.get_inputs()[0].name
+    pred = model.run(None, {input_name: scaled.astype(np.float32)})[0]
     score = float(pred[0][0])
     
     # Generate simple rating description

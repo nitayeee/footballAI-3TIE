@@ -109,12 +109,13 @@ pose_model = None
 def load_models():
     global cls_model, pose_model
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    models_dir = os.path.join(base_dir, "sistem_besar_dl", "models")
     if cls_model is None:
-        cls_path = os.path.join(base_dir, "Kel_3", "ai_gym_classification50.pt")
-        cls_model = YOLO(cls_path)
+        cls_path = os.path.join(models_dir, "kel3_classification.onnx")
+        cls_model = YOLO(cls_path, task="classify")
     if pose_model is None:
-        pose_path = os.path.join(base_dir, "Kel_3", "yolov8n-pose.pt")
-        pose_model = YOLO(pose_path)
+        pose_path = os.path.join(models_dir, "kel3_pose.onnx")
+        pose_model = YOLO(pose_path, task="pose")
 
 def process_gym_video(video_path, output_filename, limit_frames=300):
     """Processes video, saves annotated version, counts reps and returns final metrics"""
