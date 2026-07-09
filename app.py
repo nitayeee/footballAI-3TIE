@@ -138,9 +138,9 @@ def api_performance_manual():
     data = request.json or {}
     try:
         result = predict_manual(data)
-        if result.get("success"):
-            html = render_template('results/kel5_manual.html', **result)
-            result["html"] = html
+        result["success"] = True
+        html = render_template('results/kel5_manual.html', **result)
+        result["html"] = html
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

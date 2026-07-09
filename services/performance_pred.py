@@ -161,6 +161,7 @@ def predict_manual(data):
     insights = generate_strategic_insight(data, rating, category)
     
     return {
+        'success': True,
         'rating': rating,
         'category': category,
         'desc': desc,
