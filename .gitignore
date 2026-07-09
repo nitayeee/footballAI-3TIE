@@ -1,0 +1,13 @@
+# Ignore large SQLite database files
+Kel_5/database.sqlite
+chat_history.db
+predictions.db
+
+# Ignore Python caches
+__pycache__/
+services/__pycache__/
+*/__pycache__/
+
+# Ignore temporary uploads
+static/uploads/*
+!static/uploads/.gitkeep
