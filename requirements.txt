@@ -1,0 +1,12 @@
+Flask==3.1.2
+Flask-Cors==6.0.2
+tensorflow==2.21.0
+keras==3.14.0
+numpy==2.3.5
+opencv-python==4.13.0.92
+ultralytics==8.4.51
+joblib==1.5.3
+pandas==2.3.3
+Pillow==12.1.0
+h5py==3.14.0
+torch==2.10.0
