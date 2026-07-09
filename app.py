@@ -13,10 +13,7 @@ from services.tackle_offence import predict_tackle_offence
 from services.soccer_event import classify_soccer_event
 from services.epl_predict import get_teams, predict_epl_match
 
-# Group 1, 4, 10 integrations
-from services.performance_ann import predict_performance_ann
-from services.injury_risk_cnn import predict_injury_cnn
-from services.soccer_event_cnn import classify_event_cnn
+
 
 app = Flask(__name__)
 app.secret_key = "sistem_besar_deep_learning_secret_key"
@@ -381,64 +378,7 @@ def api_epl_match():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# -------------------------------------------------------------
-# API: Group 1 - Performance ANN Predictor
-# -------------------------------------------------------------
-@app.route('/api/predict/performance_ann', methods=['POST'])
-def api_performance_ann():
-    data = request.json or {}
-    position = data.get('position', '').strip().lower()
-    if not position:
-        return jsonify({"error": "Posisi harus disertakan"}), 400
-    try:
-        result = predict_performance_ann(position, data)
-        if result.get("success"):
-            html = render_template('results/kel1.html', **result)
-            result["html"] = html
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
-# -------------------------------------------------------------
-# API: Group 4 - Sport Injury Risk CNN
-# -------------------------------------------------------------
-@app.route('/api/predict/injury_cnn', methods=['POST'])
-def api_injury_cnn():
-    data = request.json or {}
-    try:
-        result = predict_injury_cnn(data)
-        if result.get("success"):
-            html = render_template('results/kel4.html', **result)
-            result["html"] = html
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# -------------------------------------------------------------
-# API: Group 10 - Soccer Event CNN
-# -------------------------------------------------------------
-@app.route('/api/predict/soccer_event_cnn', methods=['POST'])
-def api_soccer_event_cnn():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-        
-    file = request.files['file']
-    input_path = save_file(file, "event_cnn_in")
-    if not input_path:
-        return jsonify({"error": "Failed to save file"}), 400
-        
-    try:
-        result = classify_event_cnn(input_path)
-        if result.get("success"):
-            filename = os.path.basename(input_path)
-            result["image_url"] = f"/static/uploads/{filename}"
-            html = render_template('results/kel10.html', **result)
-            result["html"] = html
-            # Note: We do not unlink input_path here because we are displaying it!
-            
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 # -------------------------------------------------------------
 # API: Chat History (Supabase & SQLite Fallback)
