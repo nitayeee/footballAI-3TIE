@@ -440,5 +440,70 @@ def api_soccer_event_cnn():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# -------------------------------------------------------------
+# API: Chat History (Supabase & SQLite Fallback)
+# -------------------------------------------------------------
+from services import db
+
+@app.route('/api/chat/rooms', methods=['GET'])
+def api_get_rooms():
+    try:
+        rooms = db.get_rooms()
+        return jsonify(rooms)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/rooms', methods=['POST'])
+def api_create_room():
+    try:
+        data = request.json or {}
+        title = data.get("title", "Percakapan Baru")
+        room_id = db.create_room(title)
+        return jsonify({"success": True, "room_id": room_id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/rooms/<room_id>', methods=['PUT'])
+def api_update_room_title(room_id):
+    try:
+        data = request.json or {}
+        title = data.get("title")
+        if not title:
+            return jsonify({"error": "Title required"}), 400
+        db.update_room_title(room_id, title)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/rooms/<room_id>', methods=['DELETE'])
+def api_delete_room(room_id):
+    try:
+        db.delete_room(room_id)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/rooms/<room_id>/messages', methods=['GET'])
+def api_get_messages(room_id):
+    try:
+        messages = db.get_messages(room_id)
+        return jsonify(messages)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/rooms/<room_id>/messages', methods=['POST'])
+def api_save_message(room_id):
+    try:
+        data = request.json or {}
+        sender = data.get("sender")
+        content = data.get("content")
+        metadata = data.get("metadata")
+        if not sender or not content:
+            return jsonify({"error": "Sender and content required"}), 400
+        db.save_message(room_id, sender, content, metadata)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)

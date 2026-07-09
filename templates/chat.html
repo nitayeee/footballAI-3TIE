@@ -10,32 +10,52 @@
 </head>
 <body>
 
-    <div class="chat-container">
-        <!-- CHAT HEADER -->
-        <header class="chat-header glass">
-            <a href="/" class="back-btn">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Kembali ke Beranda
-            </a>
-            <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10s10-4.477 10-10A10 10 0 0 0 12 2zm0 4v12M6 12h12"/></svg>
-                <span>SportsIntellect AI</span>
+    <div class="chat-layout">
+        <!-- CHAT SIDEBAR (HISTORY PANEL) -->
+        <aside class="chat-sidebar" id="chat-sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" id="new-chat-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    <span>Percakapan Baru</span>
+                </button>
             </div>
-            <div class="header-spacer"></div> <!-- Spacer for balanced alignment -->
-        </header>
+            <div class="rooms-list" id="rooms-list">
+                <!-- Populated dynamically by chat.js -->
+            </div>
+        </aside>
 
-        <!-- CHAT HISTORY VIEW -->
-        <main class="chat-history" id="chat-history">
-            <!-- Chat bubbles are dynamically populated by chat.js -->
-        </main>
+        <!-- MAIN CHAT CONTAINER -->
+        <div class="chat-container">
+            <!-- CHAT HEADER -->
+            <header class="chat-header glass">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" aria-label="Toggle Sidebar">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                
+                <a href="/" class="back-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Kembali ke Beranda
+                </a>
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10s10-4.477 10-10A10 10 0 0 0 12 2zm0 4v12M6 12h12"/></svg>
+                    <span>SportsIntellect AI</span>
+                </div>
+                <div class="header-spacer"></div> <!-- Spacer for balanced alignment -->
+            </header>
 
-        <!-- CHAT FOOTER ACTIONS -->
-        <footer class="chat-footer glass">
-            <button class="restart-chat-btn" id="restart-btn">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5"/></svg>
-                Reset Percakapan
-            </button>
-        </footer>
+            <!-- CHAT HISTORY VIEW -->
+            <main class="chat-history" id="chat-history">
+                <!-- Chat bubbles are dynamically populated by chat.js -->
+            </main>
+
+            <!-- CHAT FOOTER ACTIONS -->
+            <footer class="chat-footer glass">
+                <button class="restart-chat-btn" id="restart-btn">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5"/></svg>
+                    Reset Percakapan
+                </button>
+            </footer>
+        </div>
     </div>
 
     <!-- Frontend logic controller -->

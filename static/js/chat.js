@@ -6,37 +6,356 @@ document.addEventListener("DOMContentLoaded", () => {
         gym: { name: "Gym Assistant (Kel_3)", icon: "💪", desc: "Menganalisis pose latihan Anda (squat, curl, push-up) & menghitung repetisi secara live." },
         epl: { name: "EPL Match Predictor (Kel_2)", icon: "🏆", desc: "Memproyeksikan probabilitas hasil pertandingan Liga Inggris berdasarkan performa sekuensial." },
         performance_ann: { name: "Soccer Performance Prediction (Kel_1 - ANN)", icon: "📊", desc: "Prediksi rating performa pemain sepak bola berdasarkan posisinya menggunakan model ANN." },
-        performance: { name: "Soccer Performance Prediction (Kel_5 - LSTM)", icon: "📈", desc: "Proyeksi perkembangan rating karir pemain sepak bola di masa depan menggunakan model LSTM." },
-        injury_cnn: { name: "Sport Injury Risk Prediction (Kel_4 - LSTM)", icon: "⚡", desc: "Deteksi risiko tingkat kerawanan cedera atlet menggunakan arsitektur deep learning LSTM." },
-        injury: { name: "Sport Injury Risk Prediction (Kel_6 - ANN)", icon: "🏥", desc: "Menghitung probabilitas kerawanan cedera berdasarkan data medis/fisiologis menggunakan model ANN." },
-        object: { name: "Soccer Object Detection (Kel_7)", icon: "🔍", desc: "Mendeteksi posisi bola, pemain, wasit, dan kiper dalam gambar/video menggunakan YOLOv8." },
-        tackle: { name: "Tackle Offence Prediction (Kel_8)", icon: "⚽", desc: "Klasifikasi pelanggaran tackle (Foul/Clean) dari rekaman klip video menggunakan model LSTM." },
-        event_cnn: { name: "Soccer Event Classifier (Kel_10 - CNN)", icon: "🎯", desc: "Klasifikasi 7 jenis momen peristiwa sepak bola dari gambar menggunakan custom CNN." },
-        event: { name: "Soccer Event Classifier (Kel_11 - MobileNet)", icon: "📸", desc: "Klasifikasi 7 jenis momen peristiwa sepak bola dari gambar menggunakan MobileNetV2." }
+        gym: { name: "Gym Assistant (Kel_3)", icon: "💪", desc: "Mendeteksi pose latihan & menghitung repetisi secara live." },
+        epl: { name: "EPL Match Predictor (Kel_2)", icon: "🏆", desc: "Memproyeksikan hasil pertandingan Liga Inggris." },
+        performance_ann: { name: "Soccer Performance Prediction (Kel_1 - ANN)", icon: "📊", desc: "Prediksi rating pemain sepak bola berbasis ANN." },
+        performance: { name: "Soccer Performance Prediction (Kel_5 - LSTM)", icon: "📈", desc: "Proyeksi karir pemain menggunakan model LSTM." },
+        injury_cnn: { name: "Sport Injury Risk Prediction (Kel_4 - LSTM)", icon: "⚡", desc: "Deteksi risiko cedera atlet menggunakan LSTM." },
+        injury: { name: "Sport Injury Risk Prediction (Kel_6 - ANN)", icon: "🏥", desc: "Prediksi kerawanan cedera berbasis data medis." },
+        object: { name: "Soccer Object Detection (Kel_7)", icon: "🔍", desc: "Deteksi objek (bola, pemain, wasit) memakai YOLOv8." },
+        tackle: { name: "Tackle Offence Prediction (Kel_8)", icon: "⚽", desc: "Klasifikasi pelanggaran tackle memakai LSTM." },
+        event_cnn: { name: "Soccer Event Classifier (Kel_10 - CNN)", icon: "🎯", desc: "Klasifikasi peristiwa sepak bola dengan CNN." },
+        event: { name: "Soccer Event Classifier (Kel_11 - MobileNet)", icon: "📸", desc: "Klasifikasi peristiwa sepak bola dengan MobileNetV2." }
     };
 
     let selectedFeature = null;
+    let currentRoomId = localStorage.getItem("activeRoomId") || null;
+    
+    const sidebar = document.getElementById("chat-sidebar");
+    const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
+    const newChatBtn = document.getElementById("new-chat-btn");
+    const roomsList = document.getElementById("rooms-list");
 
-    // Initialize chat
-    startChatFlow();
+    initChatRooms();
+
+    async function initChatRooms() {
+        if (sidebarToggleBtn && sidebar) {
+            sidebarToggleBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle("active");
+            });
+            document.addEventListener("click", (e) => {
+                if (sidebar.classList.contains("active") && !sidebar.contains(e.target) && e.target !== sidebarToggleBtn) {
+                    sidebar.classList.remove("active");
+                }
+            });
+        }
+
+        if (newChatBtn) {
+            newChatBtn.addEventListener("click", () => {
+                createNewRoom();
+            });
+        }
+
+        await refreshRoomsList();
+
+        if (currentRoomId) {
+            await switchRoom(currentRoomId);
+        } else {
+            await createNewRoom();
+        }
+    }
+
+    async function refreshRoomsList() {
+        if (!roomsList) return;
+        try {
+            const res = await fetch("/api/chat/rooms");
+            const rooms = await res.json();
+            roomsList.innerHTML = "";
+            rooms.forEach(room => {
+                const roomItem = document.createElement("div");
+                roomItem.className = `room-item ${room.id === currentRoomId ? 'active' : ''}`;
+                roomItem.dataset.id = room.id;
+                
+                roomItem.innerHTML = `
+                    <div class="room-title-wrapper">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        <span class="room-title-text" title="${escapeHtml(room.title)}">${escapeHtml(room.title)}</span>
+                    </div>
+                    <button class="room-delete-btn" title="Hapus Percakapan">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                `;
+
+                roomItem.addEventListener("click", () => {
+                    switchRoom(room.id);
+                });
+
+                const delBtn = roomItem.querySelector(".room-delete-btn");
+                delBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    deleteRoom(room.id);
+                });
+
+                roomsList.appendChild(roomItem);
+            });
+        } catch (err) {
+            console.error("Error fetching rooms:", err);
+        }
+    }
+
+    async function createNewRoom(title = "Percakapan Baru") {
+        try {
+            const res = await fetch("/api/chat/rooms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentRoomId = data.room_id;
+                localStorage.setItem("activeRoomId", currentRoomId);
+                await refreshRoomsList();
+                await switchRoom(currentRoomId);
+            }
+        } catch (err) {
+            console.error("Error creating room:", err);
+        }
+    }
+
+    async function deleteRoom(roomId) {
+        if (!confirm("Apakah Anda yakin ingin menghapus percakapan ini?")) return;
+        try {
+            const res = await fetch(`/api/chat/rooms/${roomId}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                if (currentRoomId === roomId) {
+                    currentRoomId = null;
+                    localStorage.removeItem("activeRoomId");
+                }
+                await refreshRoomsList();
+                const remaining = document.querySelectorAll(".room-item");
+                if (remaining.length > 0) {
+                    if (!currentRoomId) {
+                        const nextId = remaining[0].dataset.id;
+                        await switchRoom(nextId);
+                    }
+                } else {
+                    await createNewRoom();
+                }
+            }
+        } catch (err) {
+            console.error("Error deleting room:", err);
+        }
+    }
+
+    async function switchRoom(roomId) {
+        currentRoomId = roomId;
+        localStorage.setItem("activeRoomId", roomId);
+        
+        document.querySelectorAll(".room-item").forEach(item => {
+            if (item.dataset.id === roomId) {
+                item.classList.add("active");
+            } else {
+                item.classList.remove("active");
+            }
+        });
+
+        if (sidebar) sidebar.classList.remove("active");
+
+        chatHistory.innerHTML = "";
+        selectedFeature = null;
+
+        try {
+            const res = await fetch(`/api/chat/rooms/${roomId}/messages`);
+            const messages = await res.json();
+
+            if (messages.length === 0) {
+                startChatFlow();
+            } else {
+                messages.forEach(msg => {
+                    if (msg.sender === "user") {
+                        appendUserBubbleDirect(msg.content);
+                    } else {
+                        appendSystemBubbleDirect(msg.content);
+                        if (msg.metadata) {
+                            reconstructVisualizations(msg.metadata.suffix || msg.metadata.chart_id, msg.metadata);
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Error switching room:", err);
+            startChatFlow();
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    async function saveMessage(roomId, sender, content, metadata = null) {
+        if (!roomId) return;
+        try {
+            await fetch(`/api/chat/rooms/${roomId}/messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sender, content, metadata })
+            });
+        } catch (err) {
+            console.error("Error saving message:", err);
+        }
+    }
+
+    function reconstructVisualizations(suffix, data) {
+        if (!data) return;
+        setTimeout(() => {
+            if (data.chart_id) {
+                const chartCanvas = document.getElementById("chart-" + data.chart_id);
+                if (chartCanvas) {
+                    const ctx = chartCanvas.getContext('2d');
+                    const labels = [...(data.actual_years || []), ...(data.pred_years || [])];
+                    const actualData = [...(data.actual_ratings || []), ...Array((data.pred_ratings || []).length).fill(null)];
+                    const predData = [
+                        ...Array((data.actual_ratings || []).length - 1).fill(null),
+                        (data.actual_ratings || [])[(data.actual_ratings || []).length - 1],
+                        ...(data.pred_ratings || [])
+                    ];
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Rating Historis',
+                                    data: actualData,
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    tension: 0.2,
+                                    fill: true
+                                },
+                                {
+                                    label: 'Proyeksi LSTM',
+                                    data: predData,
+                                    borderColor: '#10b981',
+                                    borderDash: [5, 5],
+                                    tension: 0.2,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { labels: { color: '#e2e8f0' } }
+                            },
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 40, max: 100 }
+                            }
+                        }
+                    });
+                }
+            }
+
+            if (data.file_type === "image" && data.spatial_points) {
+                const fieldEl = document.getElementById("field-" + suffix);
+                if (fieldEl) {
+                    fieldEl.querySelectorAll('.object-dot').forEach(el => el.remove());
+                    data.spatial_points.forEach(pt => {
+                        const dot = document.createElement('div');
+                        dot.className = 'object-dot';
+                        dot.style.left = pt.x + '%';
+                        dot.style.top = pt.y + '%';
+
+                        if (pt.class === 'player') dot.classList.add('dot-player');
+                        else if (pt.class === 'ball') dot.classList.add('dot-ball');
+                        else if (pt.class === 'referee') dot.classList.add('dot-referee');
+                        else if (pt.class === 'goalkeeper') dot.classList.add('dot-goalkeeper');
+
+                        fieldEl.appendChild(dot);
+                    });
+                }
+                const chartCanvas = document.getElementById("chart-" + suffix);
+                if (chartCanvas) {
+                    const ctx = chartCanvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['BALL', 'KEEPER', 'PLAYER', 'REFEREE'],
+                            datasets: [{
+                                label: 'Detections',
+                                data: [
+                                    data.ball_count,
+                                    data.goalkeeper_count,
+                                    data.player_count,
+                                    data.referee_count
+                                ],
+                                backgroundColor: ['rgba(200, 255, 0, 0.2)', 'rgba(255, 149, 0, 0.2)', 'rgba(0, 229, 255, 0.2)', 'rgba(255, 45, 85, 0.2)'],
+                                borderColor: ['#C8FF00', '#FF9500', '#00E5FF', '#FF2D55'],
+                                borderWidth: 1,
+                                borderRadius: 4,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: { ticks: { color: '#9ca3af', font: { family: 'Inter', size: 10 } }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                                y: { ticks: { color: '#9ca3af', font: { family: 'Inter', size: 10 } }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+                            }
+                        }
+                    });
+                }
+            }
+
+            if (data.all_predictions && data.event && !data.chart_id) {
+                const chartCanvas = document.getElementById("chart-" + suffix);
+                if (chartCanvas) {
+                    const ctx = chartCanvas.getContext('2d');
+                    const events = Object.keys(data.all_predictions);
+                    const scores = Object.values(data.all_predictions);
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: events.map(e => e.replace('_', ' ')),
+                            datasets: [{
+                                label: 'Probabilitas (%)',
+                                data: scores,
+                                backgroundColor: events.map(e => e.toLowerCase() === data.event.toLowerCase() ? '#3b82f6' : 'rgba(255,255,255,0.15)'),
+                                borderRadius: 4,
+                                borderSkipped: false
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { ticks: { color: '#9ca3af', font: { size: 9 } }, grid: { display: false } },
+                                y: { ticks: { color: '#e2e8f0', font: { size: 10 } }, grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }
+        }, 150);
+    }
 
     if (restartBtn) {
         restartBtn.addEventListener("click", () => {
-            chatHistory.innerHTML = "";
-            selectedFeature = null;
-            startChatFlow();
+            createNewRoom();
         });
     }
 
     function startChatFlow() {
-        appendSystemBubble("Halo! Saya adalah Asisten AI Olahraga Terpadu. Silakan pilih salah satu fitur deep learning di bawah ini untuk memulai analisis:");
+        appendSystemBubbleDirect("Halo! Saya adalah Asisten AI Olahraga Terpadu. Silakan pilih salah satu fitur deep learning di bawah ini untuk memulai analisis:");
         appendQuickReplyButtons();
     }
 
-    // -------------------------------------------------------------
-    // CHAT BUBBLE HELPERS
-    // -------------------------------------------------------------
-    function appendSystemBubble(htmlContent) {
+    function appendSystemBubbleDirect(htmlContent) {
         const bubble = document.createElement("div");
         bubble.className = "chat-bubble bubble-left";
         bubble.innerHTML = htmlContent;
@@ -45,12 +364,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return bubble;
     }
 
-    function appendUserBubble(text) {
+    function appendSystemBubble(htmlContent, metadata = null) {
+        const bubble = appendSystemBubbleDirect(htmlContent);
+        saveMessage(currentRoomId, "system", htmlContent, metadata);
+        return bubble;
+    }
+
+    function appendUserBubbleDirect(text) {
         const bubble = document.createElement("div");
         bubble.className = "chat-bubble bubble-right";
         bubble.textContent = text;
         chatHistory.appendChild(bubble);
         scrollToBottom();
+        return bubble;
+    }
+
+    function appendUserBubble(text) {
+        appendUserBubbleDirect(text);
+        saveMessage(currentRoomId, "user", text, null);
     }
 
     function appendLoaderBubble() {
@@ -78,9 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    // -------------------------------------------------------------
-    // QUICK REPLY BUTTONS
-    // -------------------------------------------------------------
     function appendQuickReplyButtons() {
         const container = document.createElement("div");
         container.className = "quick-reply-container";
@@ -103,7 +431,21 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollToBottom();
     }
 
-    function handleFeatureSelection(featureKey, featureName) {
+    async function handleFeatureSelection(featureKey, featureName) {
+        try {
+            const currentTitle = document.querySelector(`.room-item[data-id="${currentRoomId}"] .room-title-text`);
+            if (currentTitle && currentTitle.textContent === "Percakapan Baru") {
+                await fetch(`/api/chat/rooms/${currentRoomId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title: featureName })
+                });
+                await refreshRoomsList();
+            }
+        } catch (err) {
+            console.error("Error renaming room:", err);
+        }
+
         // Clear all quick reply containers currently at the end
         const containers = document.querySelectorAll(".quick-reply-container");
         containers.forEach(c => c.remove());
@@ -827,7 +1169,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 appendSystemBubble(`❌ Gagal memproses video: ${data.error}`);
             } else {
-                appendSystemBubble(data.html);
+                appendSystemBubble(data.html, data);
             }
             appendQuickReplyButtons();
         })
@@ -896,7 +1238,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 appendSystemBubble(`❌ Gagal memproyeksikan performa: ${data.error}`);
             } else {
-                appendSystemBubble(data.html);
+                appendSystemBubble(data.html, data);
                 
                 // Render Chart.js
                 setTimeout(() => {
@@ -983,7 +1325,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     appendSystemBubble(`❌ Gagal memprediksi rating: ${data.error}`);
                 } else {
-                    appendSystemBubble(data.html);
+                    appendSystemBubble(data.html, data);
                 }
                 appendQuickReplyButtons();
             })
@@ -1030,7 +1372,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     appendSystemBubble(`❌ Gagal memprediksi risiko cedera: ${data.error}`);
                 } else {
-                    appendSystemBubble(data.html);
+                    appendSystemBubble(data.html, data);
                 }
                 appendQuickReplyButtons();
             })
@@ -1065,7 +1407,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error) {
                 appendSystemBubble(`❌ Gagal mendeteksi objek: ${data.error}`);
             } else {
-                appendSystemBubble(data.html);
+                appendSystemBubble(data.html, data);
                 
                 if (data.file_type === "image") {
                     setTimeout(() => {
@@ -1162,7 +1504,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error || !data.success) {
                     appendSystemBubble(`❌ Gagal menganalisis tackle: ${data.error || "Format tidak valid"}`);
                 } else {
-                    appendSystemBubble(data.html);
+                    appendSystemBubble(data.html, data);
                 }
                 appendQuickReplyButtons();
             })
@@ -1191,7 +1533,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error || !data.success) {
                 appendSystemBubble(`❌ Gagal menganalisis gambar tackle: ${data.error || "Format salah"}`);
             } else {
-                appendSystemBubble(data.html);
+                appendSystemBubble(data.html, data);
             }
             appendQuickReplyButtons();
         })
@@ -1222,7 +1564,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error || !data.success) {
                 appendSystemBubble(`❌ Gagal menganalisis event gambar: ${data.error || "Format salah"}`);
             } else {
-                appendSystemBubble(data.html);
+                appendSystemBubble(data.html, data);
 
                 // Render Chart.js Horizontal Bar Chart
                 setTimeout(() => {
@@ -1289,7 +1631,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error || !data.success) {
                     appendSystemBubble(`❌ Gagal memprediksi hasil pertandingan: ${data.error || "Terjadi kesalahan"}`);
                 } else {
-                    appendSystemBubble(data.html);
+                    appendSystemBubble(data.html, data);
                 }
                 appendQuickReplyButtons();
             })
@@ -1331,7 +1673,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error || !data.success) {
                     appendSystemBubble(`❌ Gagal memprediksi rating: ${data.error || "Terjadi kesalahan"}`);
                 } else {
-                    appendSystemBubble(data.html);
+                    appendSystemBubble(data.html, data);
                 }
                 appendQuickReplyButtons();
             })
@@ -1375,7 +1717,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error || !data.success) {
                     appendSystemBubble(`❌ Gagal memprediksi risiko: ${data.error || "Terjadi kesalahan"}`);
                 } else {
-                    appendSystemBubble(data.html);
+                    appendSystemBubble(data.html, data);
                 }
                 appendQuickReplyButtons();
             })
@@ -1404,7 +1746,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.error || !data.success) {
                 appendSystemBubble(`❌ Gagal mengklasifikasi momen: ${data.error || "Terjadi kesalahan"}`);
             } else {
-                appendSystemBubble(data.html);
+                appendSystemBubble(data.html, data);
             }
             appendQuickReplyButtons();
         })
