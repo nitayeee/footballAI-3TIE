@@ -14,8 +14,13 @@ stats = {}
 TIMESTEPS = 5
 N_FEATURES = 11
 
+# Try parent directory first (local PC), then current repository folder (VPS fallback)
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KEL2_DIR = os.path.join(base_dir, "Kel_2")
+if not os.path.exists(KEL2_DIR) or not os.path.exists(os.path.join(KEL2_DIR, 'epl_final.csv')):
+    repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    KEL2_DIR = os.path.join(repo_dir, "Kel_2")
+
 CSV_PATH = os.path.join(KEL2_DIR, 'epl_final.csv')
 SCALER_PATH = os.path.join(KEL2_DIR, 'scaler.pkl')
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")

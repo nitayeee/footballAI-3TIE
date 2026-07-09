@@ -23,8 +23,12 @@ model = None
 scaler_X = None
 scaler_y = None
 metadata = None
+# Try parent directory first (local PC), then current repository folder (VPS fallback)
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KEL5_DIR = os.path.join(base_dir, "Kel_5")
+if not os.path.exists(KEL5_DIR) or not os.path.exists(os.path.join(KEL5_DIR, 'scaler_X.pkl')):
+    repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    KEL5_DIR = os.path.join(repo_dir, "Kel_5")
 
 def load_resources():
     global model, scaler_X, scaler_y, metadata

@@ -1,0 +1,46 @@
+{
+  "features": [
+    "potential",
+    "crossing",
+    "finishing",
+    "heading_accuracy",
+    "short_passing",
+    "volleys",
+    "dribbling",
+    "curve",
+    "long_passing",
+    "ball_control",
+    "acceleration",
+    "sprint_speed",
+    "agility",
+    "reactions",
+    "balance",
+    "shot_power",
+    "jumping",
+    "stamina",
+    "strength",
+    "long_shots",
+    "aggression",
+    "positioning",
+    "vision",
+    "penalties",
+    "marking",
+    "standing_tackle",
+    "sliding_tackle"
+  ],
+  "target": "overall_rating",
+  "seq_len": 5,
+  "n_features": 27,
+  "best_hp": {
+    "lstm_units_1": 64,
+    "lstm_units_2": 128,
+    "dropout_rate": 0.1,
+    "dense_units": 16,
+    "learning_rate": 0.0005
+  },
+  "metrics": {
+    "MAE": 1.2653,
+    "RMSE": 1.7672,
+    "R2": 0.9148
+  }
+}
