@@ -11,6 +11,7 @@ from services.injury_risk import predict_injury_risk
 from services.object_detection import detect_in_image, track_in_video
 from services.tackle_offence import predict_tackle_offence
 from services.soccer_event import classify_soccer_event
+from services.epl_predict import get_teams, predict_epl_match
 
 app = Flask(__name__)
 app.secret_key = "sistem_besar_deep_learning_secret_key"
@@ -288,6 +289,29 @@ def api_soccer_event():
         if os.path.exists(input_path):
             os.unlink(input_path)
             
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------------------------------------------
+# API: Group 2 - EPL Match Outcome Predictor
+# -------------------------------------------------------------
+@app.route('/api/epl/teams', methods=['GET'])
+def api_epl_teams():
+    try:
+        teams = get_teams()
+        return jsonify(teams)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/predict/epl_match', methods=['POST'])
+def api_epl_match():
+    data = request.json or {}
+    team = data.get('team', '').strip()
+    if not team:
+        return jsonify({"error": "Nama tim harus disertakan"}), 400
+    try:
+        result = predict_epl_match(team)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

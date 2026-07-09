@@ -1,7 +1,7 @@
 import os
 import joblib
 import numpy as np
-import tensorflow as tf
+import onnxruntime as ort
 from datetime import datetime
 
 # Global references (lazy loaded)
@@ -14,10 +14,11 @@ def load_resources():
     global model, scaler
     if model is not None:
         return
-    model_path = os.path.join(KEL6_DIR, "best_sport_injury_revisi_model.h5")
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    model_path = os.path.join(models_dir, "best_sport_injury_revisi_model.onnx")
     scaler_path = os.path.join(KEL6_DIR, "scaler.pkl")
     if os.path.exists(model_path):
-        model = tf.keras.models.load_model(model_path)
+        model = ort.InferenceSession(model_path)
     if os.path.exists(scaler_path):
         scaler = joblib.load(scaler_path)
 
@@ -44,7 +45,8 @@ def predict_injury_risk(data):
     input_data = np.array([values])
     
     scaled_data = scaler.transform(input_data)
-    prediction = model.predict(scaled_data, verbose=0)
+    input_name = model.get_inputs()[0].name
+    prediction = model.run(None, {input_name: scaled_data.astype(np.float32)})[0]
     
     probability = float(prediction[0][0])
     prob_percent = probability * 100

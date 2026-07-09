@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const FEATURES = {
         gym: { name: "Gym Assistant (Kel_3)", icon: "💪" },
+        epl: { name: "EPL Match Predictor (Kel_2)", icon: "🏆" },
         performance: { name: "Soccer Performance Prediction (Kel_5)", icon: "📈" },
         injury: { name: "Sport Injury Risk Prediction (Kel_6)", icon: "🏥" },
         object: { name: "Soccer Object Detection (Kel_7)", icon: "🔍" },
@@ -220,6 +221,47 @@ document.addEventListener("DOMContentLoaded", () => {
             // Trigger webcam by default
             btnWebcam.click();
         }
+        else if (selectedFeature === "epl") {
+            appendSystemBubble(`
+                <div>
+                    <strong>EPL Match Predictor</strong> memproyeksikan peluang hasil pertandingan Liga Utama Inggris (EPL) berikutnya untuk tim pilihan Anda menggunakan model LSTM.<br><br>
+                    <form class="bubble-form" id="epl-form-${suffix}" style="margin-top:1rem;">
+                        <div class="form-group">
+                            <label for="epl-team-select-${suffix}">Pilih Tim Premier League:</label>
+                            <select class="form-control" id="epl-team-select-${suffix}" name="team" required>
+                                <option value="" disabled selected>Memuat daftar tim...</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-epl-predict-${suffix}" style="margin-top:1rem; width:100%;" disabled>Prediksi Pertandingan</button>
+                    </form>
+                </div>
+            `);
+            
+            const selectEl = document.getElementById(`epl-team-select-${suffix}`);
+            const btnPredict = document.getElementById(`btn-epl-predict-${suffix}`);
+            
+            fetch("/api/epl/teams")
+            .then(res => res.json())
+            .then(teams => {
+                if (selectEl) {
+                    selectEl.innerHTML = '<option value="" disabled selected>— Pilih Tim —</option>';
+                    teams.forEach(t => {
+                        const opt = document.createElement("option");
+                        opt.value = t;
+                        opt.textContent = t;
+                        selectEl.appendChild(opt);
+                    });
+                    btnPredict.disabled = false;
+                }
+            })
+            .catch(err => {
+                if (selectEl) {
+                    selectEl.innerHTML = '<option value="" disabled selected>Gagal memuat tim</option>';
+                }
+            });
+            
+            setupEplSubmit(suffix);
+        }
         else if (selectedFeature === "performance") {
             appendSystemBubble(`
                 <div>
@@ -278,38 +320,118 @@ document.addEventListener("DOMContentLoaded", () => {
                     <strong>Injury Risk Prediction</strong> memprediksi risiko cedera berdasarkan parameter latihan Anda menggunakan model ANN.<br><br>
                     Isi statistik latihan Anda di bawah ini:
                     <form class="bubble-form" id="injury-form-${suffix}" style="margin-top:1rem;">
-                        <div class="sliders-grid">
-                            ${renderSlider("Age", "Umur", 22, suffix, 10, 50, 1)}
-                            <div class="form-group">
-                                <label for="injury-gender-${suffix}">Jenis Kelamin:</label>
-                                <select class="form-control" id="injury-gender-${suffix}" name="Gender">
-                                    <option value="1">Pria</option>
-                                    <option value="0">Wanita</option>
-                                </select>
+                        
+                        <!-- Section 1: Demografis & Fisik -->
+                        <div class="injury-section-card">
+                            <div class="injury-section-header">
+                                <span class="injury-section-title">Demografis & Fisik</span>
                             </div>
-                            ${renderSlider("Height_cm", "Tinggi (cm)", 175, suffix, 120, 220, 1)}
-                            ${renderSlider("Weight_kg", "Berat (kg)", 70, suffix, 30, 120, 1)}
-                            ${renderSlider("BMI", "BMI", 22.8, suffix, 10, 40, 0.1)}
-                            ${renderSlider("Training_Frequency", "Frekuensi Latihan (kali/minggu)", 4, suffix, 1, 14, 1)}
-                            ${renderSlider("Training_Duration", "Durasi Latihan (menit)", 90, suffix, 15, 240, 5)}
-                            ${renderSlider("Warmup_Time", "Durasi Pemanasan (menit)", 10, suffix, 0, 60, 1)}
-                            ${renderSlider("Sleep_Hours", "Durasi Tidur (jam)", 7, suffix, 3, 12, 0.5)}
-                            ${renderSlider("Flexibility_Score", "Skor Kelenturan (1-5)", 3, suffix, 1, 5, 1)}
-                            ${renderSlider("Recovery_Time", "Waktu Pemulihan (hari)", 1, suffix, 0, 7, 0.5)}
-                            <div class="form-group">
-                                <label for="injury-history-${suffix}">Riwayat Cedera Sebelumnya:</label>
-                                <select class="form-control" id="injury-history-${suffix}" name="Injury_History">
-                                    <option value="0">Tidak Ada</option>
-                                    <option value="1">Ada</option>
-                                </select>
+                            <div class="sliders-grid">
+                                <div class="form-group">
+                                    <label for="injury-age-${suffix}">Usia (Tahun)</label>
+                                    <input type="number" class="form-control" id="injury-age-${suffix}" name="Age" min="18" max="40" placeholder="18 – 40" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-gender-${suffix}">Jenis Kelamin</label>
+                                    <select class="form-control" id="injury-gender-${suffix}" name="Gender" required>
+                                        <option value="" disabled selected>-- Pilih --</option>
+                                        <option value="1">Pria</option>
+                                        <option value="0">Wanita</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-height-${suffix}">Tinggi Badan (cm)</label>
+                                    <input type="number" class="form-control" id="injury-height-${suffix}" name="Height_cm" placeholder="contoh: 170" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-weight-${suffix}">Berat Badan (kg)</label>
+                                    <input type="number" class="form-control" id="injury-weight-${suffix}" name="Weight_kg" placeholder="contoh: 65" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="injury-bmi-${suffix}">BMI (Otomatis)</label>
+                                    <input type="number" class="form-control" id="injury-bmi-${suffix}" name="BMI" placeholder="Dihitung otomatis" readonly style="background: rgba(37, 99, 235, 0.05); border-color: rgba(37, 99, 235, 0.2); color: var(--primary);">
+                                </div>
                             </div>
-                            ${renderSlider("Stress_Level", "Tingkat Stres (1-10)", 4, suffix, 1, 10, 1)}
-                            ${renderSlider("Training_Intensity", "Intensitas Latihan (1-5)", 3, suffix, 1, 5, 1)}
                         </div>
+
+                        <!-- Section 2: Perilaku & Intensitas Latihan -->
+                        <div class="injury-section-card">
+                            <div class="injury-section-header">
+                                <span class="injury-section-title">Perilaku & Intensitas Latihan</span>
+                            </div>
+                            <div class="sliders-grid">
+                                <div class="form-group">
+                                    <label for="injury-freq-${suffix}">Frekuensi Latihan/Minggu</label>
+                                    <input type="number" class="form-control" id="injury-freq-${suffix}" name="Training_Frequency" min="1" max="7" placeholder="1 – 7 kali" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-duration-${suffix}">Durasi Latihan (Menit)</label>
+                                    <input type="number" class="form-control" id="injury-duration-${suffix}" name="Training_Duration" min="30" max="180" placeholder="30 – 180 menit" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-warmup-${suffix}">Waktu Pemanasan (Menit)</label>
+                                    <input type="number" class="form-control" id="injury-warmup-${suffix}" name="Warmup_Time" min="0" max="30" placeholder="0 – 30 menit" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-intensity-${suffix}">Intensitas Latihan (1-10)</label>
+                                    <input type="number" class="form-control" id="injury-intensity-${suffix}" name="Training_Intensity" step="any" min="1" max="10" placeholder="skala 1 – 10" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Indikator Fisiologis & Medis -->
+                        <div class="injury-section-card">
+                            <div class="injury-section-header">
+                                <span class="injury-section-title">Indikator Fisiologis & Medis</span>
+                            </div>
+                            <div class="sliders-grid">
+                                <div class="form-group">
+                                    <label for="injury-sleep-${suffix}">Jam Tidur Rata-rata</label>
+                                    <input type="number" class="form-control" id="injury-sleep-${suffix}" name="Sleep_Hours" step="any" min="4" max="10" placeholder="4 – 10 jam/hari" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-flexibility-${suffix}">Skor Fleksibilitas (0-100)</label>
+                                    <input type="number" class="form-control" id="injury-flexibility-${suffix}" name="Flexibility_Score" step="any" min="0" max="100" placeholder="0 – 100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-recovery-${suffix}">Pemulihan Detak Jantung</label>
+                                    <input type="number" class="form-control" id="injury-recovery-${suffix}" name="Recovery_Time" min="30" max="150" placeholder="30 – 150 detik" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="injury-history-${suffix}">Riwayat Cedera (0-5)</label>
+                                    <input type="number" class="form-control" id="injury-history-${suffix}" name="Injury_History" min="0" max="5" placeholder="0 – 5" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="injury-stress-${suffix}">Tingkat Stres (1-10)</label>
+                                    <input type="number" class="form-control" id="injury-stress-${suffix}" name="Stress_Level" min="1" max="10" placeholder="skala 1 – 10" required>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary" style="margin-top:1rem; width:100%;">Hitung Risiko Cedera</button>
                     </form>
                 </div>
             `);
+            
+            // Add BMI calculation event listeners
+            const heightInp = document.getElementById(`injury-height-${suffix}`);
+            const weightInp = document.getElementById(`injury-weight-${suffix}`);
+            const bmiInp = document.getElementById(`injury-bmi-${suffix}`);
+            
+            function calcBmi() {
+                const h = parseFloat(heightInp.value);
+                const w = parseFloat(weightInp.value);
+                if (h > 0 && w > 0) {
+                    bmiInp.value = (w / ((h / 100) ** 2)).toFixed(2);
+                } else {
+                    bmiInp.value = '';
+                }
+            }
+            if (heightInp && weightInp) {
+                heightInp.addEventListener("input", calcBmi);
+                weightInp.addEventListener("input", calcBmi);
+            }
+            
             setupInjurySubmit(suffix);
         }
         else if (selectedFeature === "object") {
@@ -715,9 +837,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const loader = appendLoaderBubble();
 
             const values = {};
-            const inputs = form.querySelectorAll("input[type='range']");
+            const inputs = form.querySelectorAll("input");
             inputs.forEach(i => {
-                values[i.name] = parseFloat(i.value);
+                if (i.value !== "") {
+                    values[i.name] = parseFloat(i.value);
+                }
             });
             const selects = form.querySelectorAll("select");
             selects.forEach(s => {
@@ -1138,6 +1262,135 @@ document.addEventListener("DOMContentLoaded", () => {
             removeLoader(loader);
             appendSystemBubble(`❌ Kesalahan server: ${err.message}`);
             appendQuickReplyButtons();
+        });
+    }
+
+    function setupEplSubmit(suffix) {
+        const form = document.getElementById(`epl-form-${suffix}`);
+        if (!form) return;
+        
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const teamSelect = document.getElementById(`epl-team-select-${suffix}`);
+            const team = teamSelect.value;
+            appendUserBubble(`Memprediksi pertandingan selanjutnya untuk ${team}`);
+            const loader = appendLoaderBubble();
+            
+            fetch("/api/predict/epl_match", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ team: team })
+            })
+            .then(res => res.json())
+            .then(data => {
+                removeLoader(loader);
+                if (data.error || !data.success) {
+                    appendSystemBubble(`❌ Gagal memprediksi hasil pertandingan: ${data.error || "Terjadi kesalahan"}`);
+                } else {
+                    const prediction = data.prediction;
+                    let badgeClass = "badge-success";
+                    let color = "var(--accent)";
+                    if (prediction === "Kalah") {
+                        badgeClass = "badge-danger";
+                        color = "var(--danger)";
+                    } else if (prediction === "Seri") {
+                        badgeClass = "badge-warning";
+                        color = "var(--warning)";
+                    }
+                    
+                    let recentHtml = "";
+                    if (data.recent_matches && data.recent_matches.length > 0) {
+                        recentHtml = `
+                            <div style="margin-top:1.2rem;">
+                                <p style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.4rem; text-transform:uppercase;">
+                                    5 Pertandingan Terakhir (Input Model):
+                                </p>
+                                <div style="overflow-x:auto;">
+                                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:center;">
+                                        <thead>
+                                            <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-secondary);">
+                                                <th style="padding:0.4rem; text-align:left;">Tanggal</th>
+                                                <th style="padding:0.4rem;">Cetak</th>
+                                                <th style="padding:0.4rem;">Kebobol</th>
+                                                <th style="padding:0.4rem;">SOT</th>
+                                                <th style="padding:0.4rem;">Hasil</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.recent_matches.map(m => {
+                                                let resColor = "var(--accent)";
+                                                if (m.result === "Kalah") resColor = "var(--danger)";
+                                                else if (m.result === "Seri") resColor = "var(--warning)";
+                                                return `
+                                                    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                                        <td style="padding:0.4rem; text-align:left; color:var(--text-secondary);">${m.date}</td>
+                                                        <td style="padding:0.4rem; font-weight:700; color:#3b82f6;">${m.goals_for}</td>
+                                                        <td style="padding:0.4rem; font-weight:700; color:#ef4444;">${m.goals_against}</td>
+                                                        <td style="padding:0.4rem;">${m.sot}</td>
+                                                        <td style="padding:0.4rem; font-weight:700; color:${resColor};">${m.result}</td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    appendSystemBubble(`
+                        <div>
+                            <div class="result-header">
+                                <span class="result-title">${data.team} - Prediksi EPL</span>
+                                <span class="result-badge ${badgeClass}">${prediction}</span>
+                            </div>
+                            
+                            <div style="margin-bottom:1.2rem; text-align:center;">
+                                <div style="font-size:1.8rem; font-weight:800; color:${color};">Akan ${prediction.toUpperCase()}</div>
+                                <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.2rem;">Prediksi hasil pertandingan selanjutnya</p>
+                            </div>
+                            
+                            <div class="prob-list" style="display:flex; flex-direction:column; gap:0.6rem;">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                                        <span>Menang</span>
+                                        <strong>${data.prob_win}%</strong>
+                                    </div>
+                                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
+                                        <div style="width:${data.prob_win}%; height:100%; background:var(--accent); transition:width 1s;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                                        <span>Seri</span>
+                                        <strong>${data.prob_draw}%</strong>
+                                    </div>
+                                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
+                                        <div style="width:${data.prob_draw}%; height:100%; background:var(--warning); transition:width 1s;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                                        <span>Kalah</span>
+                                        <strong>${data.prob_loss}%</strong>
+                                    </div>
+                                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
+                                        <div style="width:${data.prob_loss}%; height:100%; background:var(--danger); transition:width 1s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${recentHtml}
+                        </div>
+                    `);
+                }
+                appendQuickReplyButtons();
+            })
+            .catch(err => {
+                removeLoader(loader);
+                appendSystemBubble(`❌ Kesalahan server: ${err.message}`);
+                appendQuickReplyButtons();
+            });
         });
     }
 

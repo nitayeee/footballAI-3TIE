@@ -1,8 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-import tensorflow as tf
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+import onnxruntime as ort
 
 SOCCER_EVENTS = [
     "Corner_Kick",
@@ -23,18 +22,19 @@ def load_resources():
     global model
     if model is not None:
         return
-    model_path = os.path.join(KEL11_DIR, 'Model', 'mobilenetv2_soccer_event.keras')
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    model_path = os.path.join(models_dir, 'mobilenetv2_soccer_event.onnx')
     if os.path.exists(model_path):
-        model = tf.keras.models.load_model(model_path)
+        model = ort.InferenceSession(model_path)
     else:
         raise FileNotFoundError(f"Model file not found: {model_path}")
 
 def preprocess_image(img):
     img = img.resize((224, 224))
-    img_array = np.array(img)
-    img_array = img_array.astype('float32')
+    img_array = np.array(img, dtype='float32')
+    # MobileNetV2 scaling to [-1, 1]
+    img_array = (img_array / 127.5) - 1.0
     img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)
     return img_array
 
 def classify_soccer_event(image_path):
@@ -46,7 +46,8 @@ def classify_soccer_event(image_path):
         img = Image.open(image_path).convert('RGB')
         img_array = preprocess_image(img)
         
-        predictions = model.predict(img_array, verbose=0)
+        input_name = model.get_inputs()[0].name
+        predictions = model.run(None, {input_name: img_array})[0]
         predicted_class = np.argmax(predictions[0])
         confidence = float(predictions[0][predicted_class]) * 100
         event_name = SOCCER_EVENTS[predicted_class]

@@ -4,7 +4,7 @@ import pickle
 import json
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+import onnxruntime as ort
 
 AVAILABLE_FEATURES = [
     'potential', 'crossing', 'finishing', 'heading_accuracy',
@@ -54,10 +54,10 @@ def load_resources():
         with open(scaler_y_path, 'rb') as f:
             scaler_y = pickle.load(f)
             
-    model_path = os.path.join(KEL5_DIR, "model_lstm_soccer.h5")
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    model_path = os.path.join(models_dir, "model_lstm_soccer.onnx")
     if os.path.exists(model_path):
-        # compile=False to bypass Keras 3 custom loss/metric deserialization errors
-        model = tf.keras.models.load_model(model_path, compile=False)
+        model = ort.InferenceSession(model_path)
 
 def get_db_connection():
     db_path = os.path.join(KEL5_DIR, "database.sqlite")
@@ -132,7 +132,8 @@ def predict_manual(data):
             raw_input = np.array(features_list).reshape(1, -1)
             scaled_input = scaler_X.transform(raw_input)
             lstm_input = np.repeat(scaled_input[:, np.newaxis, :], SEQ_LEN, axis=1)
-            pred_scaled = model.predict(lstm_input, verbose=0)
+            input_name = model.get_inputs()[0].name
+            pred_scaled = model.run(None, {input_name: lstm_input.astype(np.float32)})[0]
             pred_real = scaler_y.inverse_transform(pred_scaled).flatten()
             rating = float(pred_real[0])
         except Exception as e:
@@ -217,8 +218,9 @@ def predict_player_career(player_id, years_ahead=5):
             pred_ratings_scaled = []
             
             for _ in range(years_ahead):
+                input_name = model.get_inputs()[0].name
                 inp = current_X.reshape(1, SEQ_LEN, len(AVAILABLE_FEATURES))
-                y_next_sc = model.predict(inp, verbose=0)[0, 0]
+                y_next_sc = model.run(None, {input_name: inp.astype(np.float32)})[0][0, 0]
                 pred_ratings_scaled.append(y_next_sc)
                 
                 # Slide sequence step

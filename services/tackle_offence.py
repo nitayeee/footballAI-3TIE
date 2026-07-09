@@ -3,8 +3,7 @@ import json
 import base64
 import numpy as np
 import cv2
-import tensorflow as tf
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+import onnxruntime as ort
 
 # Global references (lazy loaded)
 model = None
@@ -27,33 +26,20 @@ def load_resources():
             print(f"Warning: could not load threshold: {e}")
             threshold = 0.5
             
-    keras_path = os.path.join(KEL8_DIR, "model_offence.keras")
-    h5_path = os.path.join(KEL8_DIR, "model_offence.h5")
-    
-    loaded = False
-    for path, kwargs in [
-        (keras_path, {"safe_mode": False}),
-        (h5_path, {"compile": False}),
-    ]:
-        if os.path.exists(path):
-            try:
-                # Use compile=False to handle potential version discrepancies
-                model = tf.keras.models.load_model(path, **kwargs)
-                print(f"[SUCCESS] Loaded Kel_8 model from: {path}")
-                loaded = True
-                break
-            except Exception as e:
-                print(f"[ERROR] Failed loading {path}: {e}")
-                
-    if not loaded:
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    model_path = os.path.join(models_dir, "model_offence.onnx")
+    if os.path.exists(model_path):
+        model = ort.InferenceSession(model_path)
+        print(f"[SUCCESS] Loaded Kel_8 model from: {model_path}")
+    else:
         raise RuntimeError("Failed to load Kel_8 model files.")
         
-    base_model = tf.keras.applications.MobileNetV2(
-        include_top=False,
-        weights="imagenet",
-        pooling="avg"
-    )
-    base_model.trainable = False
+    base_model_path = os.path.join(models_dir, "mobilenetv2.onnx")
+    if os.path.exists(base_model_path):
+        base_model = ort.InferenceSession(base_model_path)
+        print(f"[SUCCESS] Loaded Base MobileNetV2 ONNX model from: {base_model_path}")
+    else:
+        raise RuntimeError("Failed to load base MobileNetV2 ONNX model.")
 
 def extract_frames(video_path, n_frames=16):
     cap = cv2.VideoCapture(video_path)
@@ -113,8 +99,10 @@ def compute_motion(frames):
     return flows.reshape(-1, 1)
 
 def extract_features(frames):
-    processed = preprocess_input(frames.astype(np.float32))
-    return base_model.predict(processed, verbose=0)
+    # MobileNetV2 preprocessing: scale to [-1, 1]
+    processed = (frames.astype(np.float32) / 127.5) - 1.0
+    input_name = base_model.get_inputs()[0].name
+    return base_model.run(None, {input_name: processed})[0]
 
 def format_result(raw_score, limit_threshold):
     label = "Offense" if raw_score >= limit_threshold else "No Offense"
@@ -171,7 +159,8 @@ def predict_tackle_offence(video_paths):
         # Stack inputs to expected shape: (batch, n_clips, n_frames, feat_dim)
         input_data = np.expand_dims(np.stack(clip_features, axis=0), axis=0)
         
-        raw_score = float(model.predict(input_data, verbose=0)[0][0])
+        input_name = model.get_inputs()[0].name
+        raw_score = float(model.run(None, {input_name: input_data.astype(np.float32)})[0][0][0])
         result = format_result(raw_score, threshold)
         
         # Base64-encode frames to send back to client for rendering highlights

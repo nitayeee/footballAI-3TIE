@@ -1,8 +1,7 @@
 import os
 import numpy as np
-import tensorflow as tf
+import onnxruntime as ort
 from PIL import Image
-from tensorflow.keras.applications.efficientnet import preprocess_input
 
 # Global references (lazy loaded)
 model = None
@@ -13,9 +12,10 @@ def load_resources():
     global model
     if model is not None:
         return
-    model_path = os.path.join(KEL9_DIR, "model_tackle_classifier.h5")
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    model_path = os.path.join(models_dir, "model_tackle_classifier.onnx")
     if os.path.exists(model_path):
-        model = tf.keras.models.load_model(model_path, compile=False)
+        model = ort.InferenceSession(model_path)
         print(f"[SUCCESS] Loaded Kel_9 model from: {model_path}")
     else:
         raise FileNotFoundError(f"Model Kel_9 not found at: {model_path}")
@@ -30,11 +30,12 @@ def predict_tackle_image(image_path):
         img = Image.open(image_path).convert("RGB")
         img = img.resize((224, 224))
         img = np.array(img, dtype=np.float32)
-        img = preprocess_input(img)
+        # EfficientNet preprocess is a pass-through in Keras (values 0-255)
         img = np.expand_dims(img, axis=0)
 
         # Predict
-        prediction = model.predict(img, verbose=0)
+        input_name = model.get_inputs()[0].name
+        prediction = model.run(None, {input_name: img})[0]
         score = float(prediction[0][0])
 
         if score > 0.5:
