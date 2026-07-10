@@ -1348,5 +1348,59 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* MOBILE NAVBAR AND SIDEBAR FOR LANDING PAGE */
+.mobile-only {
+    display: none;
+}
+.desktop-only {
+    display: inline-block;
+}
+
+@media (max-width: 992px) {
+    .desktop-only {
+        display: none !important;
+    }
+    .mobile-only {
+        display: block;
+    }
+    .navbar .btn-primary {
+        display: none !important;
+    }
+    .nav-toggle {
+        display: block !important;
+    }
+    .nav-menu {
+        position: fixed !important;
+        top: 0;
+        right: -280px;
+        width: 280px;
+        height: 100vh;
+        background: #ffffff !important;
+        box-shadow: -8px 0 30px rgba(0, 0, 0, 0.1);
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
+        gap: 1.5rem !important;
+        padding: 6rem 2rem 2rem !important;
+        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        z-index: 1001 !important;
+    }
+    .nav-menu.active {
+        right: 0 !important;
+    }
+    .nav-menu li {
+        width: 100%;
+    }
+    .nav-menu .nav-link {
+        font-size: 1.1rem !important;
+        display: block;
+        padding: 0.5rem 0;
+        width: 100%;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+}
+
+
 
 

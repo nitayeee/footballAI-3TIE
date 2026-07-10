@@ -130,6 +130,37 @@ def gym_reset():
     reset_gym_webcam_counter()
     return jsonify(success=True)
 
+@app.route('/api/gym/predict_frame', methods=['POST'])
+def gym_predict_frame():
+    try:
+        file = request.files.get('frame')
+        if not file:
+            return jsonify({"error": "No frame received"}), 400
+        import cv2
+        import numpy as np
+        import base64
+        file_bytes = np.frombuffer(file.read(), np.uint8)
+        frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        if frame is None:
+            return jsonify({"error": "Invalid image frame"}), 400
+        from services.gym_assistant import process_single_frame, webcam_status
+        annotated_frame = process_single_frame(frame)
+        ret, buffer = cv2.imencode('.jpg', annotated_frame)
+        if not ret:
+            return jsonify({"error": "Failed to encode frame"}), 500
+        encoded_image = base64.b64encode(buffer).decode('utf-8')
+        return jsonify({
+            "success": True,
+            "exercise": webcam_status["exercise"],
+            "confidence": webcam_status["confidence"],
+            "reps": webcam_status["reps"],
+            "feedback": webcam_status["feedback"],
+            "angle": webcam_status["angle"],
+            "annotated_frame": f"data:image/jpeg;base64,{encoded_image}"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # -------------------------------------------------------------
 # API: Group 5 - Soccer Performance Prediction
 # -------------------------------------------------------------
