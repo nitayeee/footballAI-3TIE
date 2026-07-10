@@ -1,25 +1,31 @@
 <div>
+<<<<<<< HEAD
     <div class="epl-result-header" style="border-left: 3px solid {% if prediction == 'Menang' %}#00ff85{% elif prediction == 'Seri' %}#e8c547{% else %}#FF5252{% endif %};">
         <div class="epl-result-title-group">
             <p class="epl-result-kicker">Prediksi Pertandingan EPL</p>
             <span class="epl-result-team">{{ team }}</span>
         </div>
+=======
+    <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <span class="result-title" style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem;">{{ team }} - Prediksi Pertandingan EPL</span>
+>>>>>>> c7a201247f13ac7627b69b2eb38a4bb45e964f5d
         {% if prediction == 'Menang' %}
-        <span class="result-badge badge-success" style="background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.3); color: #00ff85; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ prediction }}</span>
+        <span class="result-badge badge-success" style="background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.3); color: #008746; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ prediction }}</span>
         {% elif prediction == 'Seri' %}
-        <span class="result-badge badge-warning" style="background: rgba(232, 197, 71, 0.15); border: 1px solid rgba(232, 197, 71, 0.3); color: #e8c547; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ prediction }}</span>
+        <span class="result-badge badge-warning" style="background: rgba(232, 197, 71, 0.15); border: 1px solid rgba(232, 197, 71, 0.3); color: #b28a00; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ prediction }}</span>
         {% else %}
-        <span class="result-badge badge-danger" style="background: rgba(255, 82, 82, 0.15); border: 1px solid rgba(255, 82, 82, 0.3); color: #FF5252; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ prediction }}</span>
+        <span class="result-badge badge-danger" style="background: rgba(255, 82, 82, 0.15); border: 1px solid rgba(255, 82, 82, 0.3); color: #c62828; font-size: 0.75rem; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; font-weight: 700;">{{ prediction }}</span>
         {% endif %}
     </div>
     
-    <div style="margin-bottom: 1.25rem; text-align: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem 0;">
-        <div style="font-size: 2rem; font-weight: 900; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; color: {% if prediction == 'Menang' %}#00ff85{% elif prediction == 'Seri' %}#e8c547{% else %}#FF5252{% endif %};">
+    <div style="margin-bottom: 1.25rem; text-align: center; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; padding: 1rem 0;">
+        <div style="font-size: 2rem; font-weight: 900; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; color: {% if prediction == 'Menang' %}#10b981{% elif prediction == 'Seri' %}#f59e0b{% else %}#ef4444{% endif %};">
             AKAN {{ prediction|upper }}
         </div>
         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Proyeksi model LSTM berdasarkan performa sekuensial</p>
     </div>
     
+<<<<<<< HEAD
     <div class="epl-prob-card">
         <div class="epl-prob-row">
             <div class="epl-prob-row-top">
@@ -46,6 +52,34 @@
             </div>
             <div class="epl-prob-row-track">
                 <div class="epl-prob-row-fill" style="width: {{ prob_loss }}%; background: linear-gradient(90deg, #e02424, #FF5252);"></div>
+=======
+    <div class="prob-list" style="display: flex; flex-direction: column; gap: 0.75rem; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05); padding: 1rem; border-radius: 12px;">
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem;">
+                <span style="color: var(--text-secondary);">Peluang Menang</span>
+                <strong style="color: #10b981;">{{ prob_win }}%</strong>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(0, 0, 0, 0.08); border-radius: 10px; overflow: hidden;">
+                <div style="width: {{ prob_win }}%; height: 100%; background: #10b981; border-radius: 10px; transition: width 0.8s;"></div>
+            </div>
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem;">
+                <span style="color: var(--text-secondary);">Peluang Seri</span>
+                <strong style="color: #f59e0b;">{{ prob_draw }}%</strong>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(0, 0, 0, 0.08); border-radius: 10px; overflow: hidden;">
+                <div style="width: {{ prob_draw }}%; height: 100%; background: #f59e0b; border-radius: 10px; transition: width 0.8s;"></div>
+            </div>
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem;">
+                <span style="color: var(--text-secondary);">Peluang Kalah</span>
+                <strong style="color: #ef4444;">{{ prob_loss }}%</strong>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(0, 0, 0, 0.08); border-radius: 10px; overflow: hidden;">
+                <div style="width: {{ prob_loss }}%; height: 100%; background: #ef4444; border-radius: 10px; transition: width 0.8s;"></div>
+>>>>>>> c7a201247f13ac7627b69b2eb38a4bb45e964f5d
             </div>
         </div>
     </div>
@@ -55,10 +89,10 @@
         <p style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">
             {{ recent_matches|length }} Pertandingan Terakhir (Input Model):
         </p>
-        <div style="overflow-x: auto; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 0.5rem;">
+        <div style="overflow-x: auto; background: rgba(0,0,0,0.01); border: 1px solid rgba(0,0,0,0.05); border-radius: 10px; padding: 0.5rem;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: center;">
                 <thead>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: var(--text-secondary);">
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.08); color: var(--text-secondary);">
                         <th style="padding: 0.4rem; text-align: left; font-weight: 600;">Tanggal</th>
                         <th style="padding: 0.4rem; font-weight: 600;">Gol</th>
                         <th style="padding: 0.4rem; font-weight: 600;">Kebobol</th>
@@ -68,12 +102,16 @@
                 </thead>
                 <tbody>
                     {% for m in recent_matches %}
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.03);">
                         <td style="padding: 0.4rem; text-align: left; color: var(--text-secondary);">{{ m.date }}</td>
-                        <td style="padding: 0.4rem; font-weight: 700; color: #3b82f6;">{{ m.goals_for }}</td>
+                        <td style="padding: 0.4rem; font-weight: 700; color: #2563eb;">{{ m.goals_for }}</td>
                         <td style="padding: 0.4rem; font-weight: 700; color: #ef4444;">{{ m.goals_against }}</td>
                         <td style="padding: 0.4rem; color: var(--text-primary);">{{ m.sot }}</td>
+<<<<<<< HEAD
                         <td style="padding: 0.4rem; font-weight: 700; color: {% if m.result == 'Menang' %}#00ff85{% elif m.result == 'Seri' %}#e8c547{% else %}#FF5252{% endif %};">
+=======
+                        <td style="padding: 0.4rem; font-weight: 700; color: {% if m.result == 'Menang' %}#10b981{% elif m.result == 'Seri' %}#f59e0b{% else %}#ef4444{% endif %};">
+>>>>>>> c7a201247f13ac7627b69b2eb38a4bb45e964f5d
                             {{ m.result }}
                         </td>
                     </tr>
