@@ -236,6 +236,9 @@ def api_object_detection():
                 
             result["file_type"] = "video"
             result["annotated_video_url"] = f"/static/uploads/{output_filename}"
+            result["video_url"] = result["annotated_video_url"]
+            suffix = uuid.uuid4().hex[:8]
+            result["suffix"] = suffix
             
             # Render templates results/kel7_video.html
             html = render_template('results/kel7_video.html', **result)

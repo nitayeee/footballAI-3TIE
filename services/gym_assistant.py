@@ -108,8 +108,11 @@ pose_model = None
 
 def load_models():
     global cls_model, pose_model
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    models_dir = os.path.join(base_dir, "sistem_besar_dl", "models")
+    # Dynamic path resolution to models directory (relative to services folder)
+    #services_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    models_dir = os.path.join(base_dir, "models")
+    
     if cls_model is None:
         cls_path = os.path.join(models_dir, "kel3_classification.onnx")
         cls_model = YOLO(cls_path, task="classify")

@@ -7,8 +7,12 @@ from datetime import datetime
 # Global references (lazy loaded)
 model = None
 scaler = None
+# Try parent directory first (local PC), then current repository folder (VPS fallback)
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KEL6_DIR = os.path.join(base_dir, "Kel_6")
+if not os.path.exists(KEL6_DIR) or not os.path.exists(os.path.join(KEL6_DIR, "scaler.pkl")):
+    repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    KEL6_DIR = os.path.join(repo_dir, "Kel_6")
 
 def load_resources():
     global model, scaler

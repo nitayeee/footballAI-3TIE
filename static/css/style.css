@@ -1300,3 +1300,53 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
     }
 }
+
+/* WIDE BUBBLE FOR SPATIAL MAPS / CHARTS */
+@media (min-width: 769px) {
+    .chat-bubble.wide-bubble {
+        max-width: 85% !important;
+        width: 620px !important;
+    }
+}
+@media (max-width: 768px) {
+    .chat-bubble.wide-bubble {
+        max-width: 95% !important;
+        width: 100% !important;
+    }
+}
+
+/* REVEAL ON SCROLL ANIMATIONS */
+.reveal-fade-up {
+    opacity: 0 !important;
+    transform: translateY(40px) !important;
+    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+.reveal-fade-up.active {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* responsive grid styling for workflow section */
+@media (max-width: 992px) {
+    .workflow-timeline {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+@media (max-width: 576px) {
+    .workflow-timeline {
+        grid-template-columns: 1fr !important;
+        gap: 2.5rem !important;
+    }
+}
+
+/* responsive grid styling for premium footer */
+@media (max-width: 768px) {
+    .footer-grid-container {
+        grid-template-columns: 1fr !important;
+        gap: 2.5rem !important;
+    }
+}
+
+
+

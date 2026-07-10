@@ -12,13 +12,14 @@
     <!-- NAVBAR -->
     <nav class="navbar glass">
         <div class="logo" onclick="window.location.href='/'">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10s10-4.477 10-10A10 10 0 0 0 12 2zm0 4v12M6 12h12"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/><path d="M12 2a6 6 0 0 0-6 6v1c0 2.2 1.8 4 4 4h4c2.2 0 4-1.8 4-4V8a6 6 0 0 0-6-6z"/></svg>
             <span>SportsIntellect</span>
         </div>
         <ul class="nav-menu">
             <li><a href="#home" class="nav-link active">Home</a></li>
             <li><a href="#about" class="nav-link">About Us</a></li>
             <li><a href="#fitur" class="nav-link">Fitur</a></li>
+            <li><a href="#cara-kerja" class="nav-link">Cara Kerja</a></li>
             <li><a href="#team" class="nav-link">Our Team</a></li>
         </ul>
         <a href="/chat" class="btn btn-primary">Mulai Sekarang</a>
@@ -45,11 +46,14 @@
 
     <!-- ABOUT US SECTION -->
     <section id="about" class="section">
+        <div class="section-header">
+            <h2>Tentang Kolaborasi Kami</h2>
+            <p>Kolaborasi mahasiswa Kelas 3 TI E dalam mata kuliah Sistem Besar Deep Learning.</p>
+        </div>
         <div class="about-grid">
             <div class="about-text">
-                <h3>Tentang Kolaborasi Kami</h3>
                 <h2>Menggabungkan Kekuatan Akademik Menjadi Solusi Praktis</h2>
-                <p>Proyek ini merupakan wujud integrasi dari mata kuliah Sistem Besar Deep Learning. Kami menyatukan karya terbaik dari 7 kelompok kelas untuk menghasilkan satu ekosistem web terpadu yang memantau performa, meminimalkan risiko cedera, serta membaca jalannya permainan sepak bola.</p>
+                <p>Proyek ini merupakan wujud integrasi dari mata kuliah Sistem Besar Deep Learning oleh mahasiswa Kelas 3 TI E. Kami menyatukan karya terbaik dari 7 kelompok kelas untuk menghasilkan satu ekosistem web terpadu yang memantau performa, meminimalkan risiko cedera, serta membaca jalannya permainan sepak bola.</p>
                 <p>Dengan membagi sistem ke dalam arsitektur micro-services backend yang efisien, sistem dapat memproses video, foto, dan data tabular dalam waktu singkat tanpa membebani memori server.</p>
             </div>
             <div class="about-stats">
@@ -86,7 +90,7 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v8H2z"/></svg>
                 </div>
-                <h3>AI Gym Assistant (Kel_3)</h3>
+                <h3>AI Gym Assistant (YOLOv8 Pose)</h3>
                 <p>Deteksi pose latihan secara real-time. Menghitung repetisi push-up, curl, press, dan squat, serta memberikan koreksi sudut sendi seketika.</p>
             </div>
 
@@ -95,7 +99,7 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/><path d="M12 2a6 6 0 0 0-6 6v1c0 2.2 1.8 4 4 4h4c2.2 0 4-1.8 4-4V8a6 6 0 0 0-6-6z"/></svg>
                 </div>
-                <h3>EPL Match Predictor (Kel_2)</h3>
+                <h3>EPL Match Predictor (LSTM)</h3>
                 <p>Memprediksi probabilitas menang, seri, atau kalah untuk pertandingan tim EPL berikutnya menggunakan model regresi sekuensial LSTM berdasarkan performa historis.</p>
             </div>
 
@@ -104,7 +108,7 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
-                <h3>Performance Prediction (Kel_5)</h3>
+                <h3>Performance Prediction (LSTM)</h3>
                 <p>Memproyeksikan rating masa depan dan karir pemain bola. Menghasilkan keputusan taktis tim berdasarkan forecasting model autoregresif LSTM.</p>
             </div>
 
@@ -113,7 +117,7 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 </div>
-                <h3>Injury Risk Prediction (Kel_6)</h3>
+                <h3>Injury Risk Prediction (ANN)</h3>
                 <p>Menghitung persentase tingkat kerawanan cedera atlet menggunakan model jaringan saraf tiruan (ANN) berlandaskan metrik latihan harian.</p>
             </div>
 
@@ -122,7 +126,7 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </div>
-                <h3>Soccer Object Detection (Kel_7)</h3>
+                <h3>Soccer Object Detection (YOLOv8)</h3>
                 <p>Deteksi presisi pemain sepak bola, bola, wasit, dan penjaga gawang di lapangan hijau secara spasial menggunakan model YOLOv8.</p>
             </div>
 
@@ -131,7 +135,7 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
                 </div>
-                <h3>Tackle Offence Prediction (Kel_8)</h3>
+                <h3>Tackle Offence Prediction (MobileNetV2 + LSTM)</h3>
                 <p>Membaca rekaman video tackle dari beberapa sudut kamera untuk mengidentifikasi adanya pelanggaran (offence) menggunakan MobileNetV2 + LSTM.</p>
             </div>
 
@@ -140,10 +144,50 @@
                 <div class="feature-icon-wrapper">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 </div>
-                <h3>Soccer Event Classifier (Kel_11)</h3>
+                <h3>Soccer Event Classifier (MobileNetV2)</h3>
                 <p>Mengidentifikasi 7 jenis kejadian/kejadian pertandingan penting (seperti Corner Kick, Penalty kick, Red/Yellow Card) hanya lewat sebuah foto aksi.</p>
             </div>
 
+        </div>
+    </section>
+
+    <!-- CARA KERJA SECTION -->
+    <section id="cara-kerja" class="section reveal-fade-up" style="background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.02), transparent); padding-top: 5rem; padding-bottom: 5rem;">
+        <div class="section-header">
+            <h2>Bagaimana Sistem Ini Bekerja</h2>
+            <p>Alur pemrosesan data oleh kecerdasan buatan dari input hingga hasil visualisasi interaktif.</p>
+        </div>
+        
+        <div class="workflow-container" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+            <div class="workflow-timeline" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;">
+                <div class="workflow-card glass" style="border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; border: 1px solid var(--border-glass); transition: all 0.3s ease; position: relative;">
+                    <div style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-outfit); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">1</div>
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; font-family: var(--font-outfit); font-weight: 700;">Pilih Fitur</h3>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">Pilih salah satu dari 7 modul analisis cerdas olahraga melalui asisten chat interaktif.</p>
+                </div>
+                
+                <div class="workflow-card glass" style="border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; border: 1px solid var(--border-glass); transition: all 0.3s ease; position: relative;">
+                    <div style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-outfit); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">2</div>
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">📤</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; font-family: var(--font-outfit); font-weight: 700;">Unggah Media</h3>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">Unggah file rekaman video, foto aksi lapangan, atau ketik metrik performa atlet Anda.</p>
+                </div>
+                
+                <div class="workflow-card glass" style="border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; border: 1px solid var(--border-glass); transition: all 0.3s ease; position: relative;">
+                    <div style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-outfit); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">3</div>
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚙️</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; font-family: var(--font-outfit); font-weight: 700;">Model Deep Learning</h3>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">Model backend Python memproses data memakai algoritma khusus (YOLO, LSTM, ANN, dll.).</p>
+                </div>
+                
+                <div class="workflow-card glass" style="border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; border: 1px solid var(--border-glass); transition: all 0.3s ease; position: relative;">
+                    <div style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-outfit); font-size: 0.9rem; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">4</div>
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; font-family: var(--font-outfit); font-weight: 700;">Visualisasi Instan</h3>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">Lihat hasil berupa pelacakan pose, grafik distribusi, peta sebaran pemain, dan rekomendasi.</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -185,8 +229,40 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="footer">
-        <p>&copy; 2026 SportsIntellect. Dibuat untuk Proyek Mata Kuliah Sistem Besar Deep Learning.</p>
+    <footer class="footer" style="padding: 4rem 5% 2rem; border-top: 1px solid var(--border-glass); background: #ffffff;">
+        <div class="footer-grid-container" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1.5fr; gap: 4rem; text-align: left;">
+            <div>
+                <div class="logo" style="margin-bottom: 1rem; cursor: pointer; display: inline-flex;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/><path d="M12 2a6 6 0 0 0-6 6v1c0 2.2 1.8 4 4 4h4c2.2 0 4-1.8 4-4V8a6 6 0 0 0-6-6z"/></svg>
+                    <span style="font-weight: 800; background: linear-gradient(to right, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-left: 0.6rem; font-family: var(--font-outfit); font-size: 1.5rem;">SportsIntellect</span>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; max-width: 320px;">
+                    Platform analisis olahraga cerdas berbasis Deep Learning terintegrasi. Membantu pelatih, analis, dan atlet memantau performa secara akurat.
+                </p>
+            </div>
+            <div>
+                <h4 style="font-family: var(--font-outfit); font-weight: 700; color: var(--text-primary); margin-bottom: 1.2rem; font-size: 1rem;">Navigasi</h4>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem;">
+                    <li><a href="#home" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">Home</a></li>
+                    <li><a href="#about" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">About Us</a></li>
+                    <li><a href="#fitur" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">Fitur Analisis</a></li>
+                    <li><a href="#cara-kerja" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">Cara Kerja</a></li>
+                    <li><a href="#team" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">Tim Kami</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="font-family: var(--font-outfit); font-weight: 700; color: var(--text-primary); margin-bottom: 1.2rem; font-size: 1rem;">Mata Kuliah & Kelas</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
+                    Dikembangkan sebagai Proyek Kolaborasi Sistem Besar Deep Learning oleh mahasiswa <strong>Kelas 3 TI E</strong>.
+                </p>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                    Tahun Akademik: 2026
+                </div>
+            </div>
+        </div>
+        <div style="max-width: 1200px; margin: 3rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border-glass); text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+            &copy; 2026 SportsIntellect. Hak Cipta Dilindungi Undang-Undang.
+        </div>
     </footer>
 
     <script>
@@ -199,6 +275,42 @@
                 navbar.classList.remove("scrolled");
             }
         });
+
+        // Smooth scroll for navbar links
+        document.querySelectorAll('.nav-menu a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetEl = document.querySelector(targetId);
+                if (targetEl) {
+                    const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                    const targetPosition = targetEl.getBoundingClientRect().top + window.pageYOffset - navbarHeight + 10;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Reveal page elements on scroll
+        const revealCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("active");
+                }
+            });
+        };
+
+        const revealObserver = new IntersectionObserver(revealCallback, {
+            threshold: 0.15
+        });
+
+        document.querySelectorAll('.reveal-fade-up, .feature-card, .stat-card, .workflow-card').forEach(el => {
+            el.classList.add('reveal-fade-up');
+            revealObserver.observe(el);
+        });
+
     </script>
 </body>
 </html>

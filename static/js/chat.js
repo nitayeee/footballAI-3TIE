@@ -3,13 +3,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const restartBtn = document.getElementById("restart-btn");
 
     const FEATURES = {
-        gym: { name: "Gym Assistant (Kel_3)", icon: "💪", desc: "Mendeteksi pose latihan & menghitung repetisi secara live." },
-        epl: { name: "EPL Match Predictor (Kel_2)", icon: "🏆", desc: "Memproyeksikan hasil pertandingan Liga Inggris." },
-        performance: { name: "Soccer Performance Prediction (Kel_5 - LSTM)", icon: "📈", desc: "Proyeksi karir pemain menggunakan model LSTM." },
-        injury: { name: "Sport Injury Risk Prediction (Kel_6 - ANN)", icon: "🏥", desc: "Prediksi kerawanan cedera berbasis data medis." },
-        object: { name: "Soccer Object Detection (Kel_7)", icon: "🔍", desc: "Deteksi objek (bola, pemain, wasit) memakai YOLOv8." },
-        tackle: { name: "Tackle Offence Prediction (Kel_8)", icon: "⚽", desc: "Klasifikasi pelanggaran tackle memakai LSTM." },
-        event: { name: "Soccer Event Classifier (Kel_11 - MobileNet)", icon: "📸", desc: "Klasifikasi peristiwa sepak bola dengan MobileNetV2." }
+        gym: { name: "Gym Assistant (YOLOv8 Pose)", icon: "💪", desc: "Mendeteksi pose latihan & menghitung repetisi secara live." },
+        epl: { name: "EPL Match Predictor (LSTM)", icon: "🏆", desc: "Memproyeksikan hasil pertandingan Liga Inggris." },
+        performance: { name: "Soccer Performance Prediction (LSTM)", icon: "📈", desc: "Proyeksi karir pemain menggunakan model LSTM." },
+        injury: { name: "Sport Injury Risk Prediction (ANN)", icon: "🏥", desc: "Prediksi kerawanan cedera berbasis data medis." },
+        object: { name: "Soccer Object Detection (YOLOv8)", icon: "🔍", desc: "Deteksi objek (bola, pemain, wasit) memakai YOLOv8." },
+        tackle: { name: "Tackle Offence Prediction (MobileNetV2 + LSTM)", icon: "⚽", desc: "Klasifikasi pelanggaran tackle memakai LSTM." },
+        event: { name: "Soccer Event Classifier (MobileNetV2)", icon: "📸", desc: "Klasifikasi peristiwa sepak bola dengan MobileNetV2." }
     };
 
     let selectedFeature = null;
@@ -360,6 +360,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function appendSystemBubble(htmlContent, metadata = null) {
         const bubble = appendSystemBubbleDirect(htmlContent);
+        if (bubble && metadata && (metadata.file_type === "image" || metadata.file_type === "video") && (metadata.spatial_points !== undefined || metadata.total_unique_players !== undefined)) {
+            bubble.classList.add("wide-bubble");
+        }
         saveMessage(currentRoomId, "system", htmlContent, metadata);
         return bubble;
     }
@@ -809,8 +812,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <strong>Tackle Offence Prediction</strong> memprediksi apakah sebuah tackle melanggar peraturan (Offence) atau bersih (No Offence).<br><br>
                     Pilih tipe input untuk menganalisis tackle:
                     <div style="display:flex; gap:0.5rem; margin-top:1rem; margin-bottom:1rem;">
-                        <button class="btn btn-primary btn-sm" id="btn-tackle-video-${suffix}" style="padding:0.4rem 1rem; font-size:0.85rem;">Unggah Video (Kel_8)</button>
-                        <button class="btn btn-secondary btn-sm" id="btn-tackle-image-${suffix}" style="padding:0.4rem 1rem; font-size:0.85rem;">Unggah Gambar (Kel_9)</button>
+                        <button class="btn btn-primary btn-sm" id="btn-tackle-video-${suffix}" style="padding:0.4rem 1rem; font-size:0.85rem;">Unggah Video (MobileNetV2 + LSTM)</button>
+                        <button class="btn btn-secondary btn-sm" id="btn-tackle-image-${suffix}" style="padding:0.4rem 1rem; font-size:0.85rem;">Unggah Gambar (EfficientNet-B0)</button>
                     </div>
                     <div id="tackle-input-area-${suffix}"></div>
                 </div>
@@ -835,7 +838,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <label>Klip 3 (Highlight 2 - Opsional):</label>
                             <input type="file" class="form-control" name="clip_2" accept="video/mp4">
                         </div>
-                        <button type="submit" class="btn btn-primary" style="margin-top:0.8rem; width:100%;">Analisis Tackle Video (Kel_8)</button>
+                        <button type="submit" class="btn btn-primary" style="margin-top:0.8rem; width:100%;">Analisis Tackle Video (MobileNetV2 + LSTM)</button>
                     </form>
                 `;
                 setupTackleSubmit(suffix);
@@ -1183,7 +1186,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 appendSystemBubble(data.html, data);
                 
-                if (data.file_type === "image") {
+                if (data.file_type === "image" || data.file_type === "video") {
                     setTimeout(() => {
                         const fieldEl = document.getElementById("field-" + data.suffix);
                         if (fieldEl && data.spatial_points) {
