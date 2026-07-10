@@ -54,6 +54,11 @@ def init_sqlite_db():
             FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE
         )
     """)
+    # Migration: add session_id to chat_rooms if this is a pre-existing DB
+    cursor.execute("PRAGMA table_info(chat_rooms)")
+    existing_cols = [row[1] for row in cursor.fetchall()]
+    if "session_id" not in existing_cols:
+        cursor.execute("ALTER TABLE chat_rooms ADD COLUMN session_id TEXT")
     conn.commit()
     conn.close()
 
@@ -61,24 +66,32 @@ def init_sqlite_db():
 if supabase_client is None:
     init_sqlite_db()
 
-def get_rooms():
+def _sqlite_room_belongs(room_id, session_id):
+    conn = get_sqlite_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM chat_rooms WHERE id = ? AND session_id = ?", (room_id, session_id))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
+
+def get_rooms(session_id):
     if supabase_client:
         try:
-            res = supabase_client.table("chat_rooms").select("*").order("updated_at", desc=True).execute()
+            res = supabase_client.table("chat_rooms").select("*").eq("session_id", session_id).order("updated_at", desc=True).execute()
             return res.data
         except Exception as e:
             print(f"[DB] Supabase get_rooms failed: {e}. Falling back to SQLite.")
-            
+
     # SQLite fallback
     init_sqlite_db()
     conn = get_sqlite_conn()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM chat_rooms ORDER BY updated_at DESC")
+    cursor.execute("SELECT * FROM chat_rooms WHERE session_id = ? ORDER BY updated_at DESC", (session_id,))
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
-def create_room(title="Percakapan Baru"):
+def create_room(session_id, title="Percakapan Baru"):
     room_id = str(uuid.uuid4())
     now_str = datetime.utcnow().isoformat()
     if supabase_client:
@@ -86,6 +99,7 @@ def create_room(title="Percakapan Baru"):
             res = supabase_client.table("chat_rooms").insert({
                 "id": room_id,
                 "title": title,
+                "session_id": session_id,
                 "created_at": now_str,
                 "updated_at": now_str
             }).execute()
@@ -93,64 +107,68 @@ def create_room(title="Percakapan Baru"):
                 return res.data[0]["id"]
         except Exception as e:
             print(f"[DB] Supabase create_room failed: {e}. Falling back to SQLite.")
-            
+
     # SQLite fallback
     init_sqlite_db()
     conn = get_sqlite_conn()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO chat_rooms (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)",
-        (room_id, title, now_str, now_str)
+        "INSERT INTO chat_rooms (id, title, session_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+        (room_id, title, session_id, now_str, now_str)
     )
     conn.commit()
     conn.close()
     return room_id
 
-def delete_room(room_id):
+def delete_room(room_id, session_id):
     if supabase_client:
         try:
-            res = supabase_client.table("chat_rooms").delete().eq("id", room_id).execute()
+            supabase_client.table("chat_rooms").delete().eq("id", room_id).eq("session_id", session_id).execute()
             return True
         except Exception as e:
             print(f"[DB] Supabase delete_room failed: {e}. Falling back to SQLite.")
-            
+
     # SQLite fallback
     init_sqlite_db()
     conn = get_sqlite_conn()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM chat_rooms WHERE id = ?", (room_id,))
-    cursor.execute("DELETE FROM chat_messages WHERE room_id = ?", (room_id,))
+    cursor.execute("DELETE FROM chat_rooms WHERE id = ? AND session_id = ?", (room_id, session_id))
+    if cursor.rowcount > 0:
+        cursor.execute("DELETE FROM chat_messages WHERE room_id = ?", (room_id,))
     conn.commit()
     conn.close()
     return True
 
-def update_room_title(room_id, title):
+def update_room_title(room_id, session_id, title):
     now_str = datetime.utcnow().isoformat()
     if supabase_client:
         try:
-            res = supabase_client.table("chat_rooms").update({
+            supabase_client.table("chat_rooms").update({
                 "title": title,
                 "updated_at": now_str
-            }).eq("id", room_id).execute()
+            }).eq("id", room_id).eq("session_id", session_id).execute()
             return True
         except Exception as e:
             print(f"[DB] Supabase update_room_title failed: {e}. Falling back to SQLite.")
-            
+
     # SQLite fallback
     init_sqlite_db()
     conn = get_sqlite_conn()
     cursor = conn.cursor()
     cursor.execute(
-        "UPDATE chat_rooms SET title = ?, updated_at = ? WHERE id = ?",
-        (title, now_str, room_id)
+        "UPDATE chat_rooms SET title = ?, updated_at = ? WHERE id = ? AND session_id = ?",
+        (title, now_str, room_id, session_id)
     )
     conn.commit()
     conn.close()
     return True
 
-def get_messages(room_id):
+def get_messages(room_id, session_id):
     if supabase_client:
         try:
+            room_check = supabase_client.table("chat_rooms").select("id").eq("id", room_id).eq("session_id", session_id).execute()
+            if not room_check.data:
+                return []
             res = supabase_client.table("chat_messages").select("*").eq("room_id", room_id).order("id").execute()
             data = res.data
             for msg in data:
@@ -162,15 +180,17 @@ def get_messages(room_id):
             return data
         except Exception as e:
             print(f"[DB] Supabase get_messages failed: {e}. Falling back to SQLite.")
-            
+
     # SQLite fallback
     init_sqlite_db()
+    if not _sqlite_room_belongs(room_id, session_id):
+        return []
     conn = get_sqlite_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM chat_messages WHERE room_id = ? ORDER BY id ASC", (room_id,))
     rows = cursor.fetchall()
     conn.close()
-    
+
     msgs = []
     for r in rows:
         d = dict(r)
@@ -182,16 +202,28 @@ def get_messages(room_id):
         msgs.append(d)
     return msgs
 
-def save_message(room_id, sender, content, metadata=None):
+def save_message(room_id, session_id, sender, content, metadata=None):
     now_str = datetime.utcnow().isoformat()
-    
+
+    if supabase_client:
+        try:
+            room_check = supabase_client.table("chat_rooms").select("id").eq("id", room_id).eq("session_id", session_id).execute()
+            if not room_check.data:
+                return False
+        except Exception as e:
+            print(f"[DB] Supabase room ownership check failed: {e}. Falling back to SQLite.")
+    else:
+        init_sqlite_db()
+        if not _sqlite_room_belongs(room_id, session_id):
+            return False
+
     # Also update the room's updated_at timestamp to bring it to top of list
     try:
         title = get_room_title(room_id)
-        update_room_title(room_id, title)
+        update_room_title(room_id, session_id, title)
     except:
         pass
-        
+
     if supabase_client:
         try:
             res = supabase_client.table("chat_messages").insert({
@@ -204,7 +236,7 @@ def save_message(room_id, sender, content, metadata=None):
             return True
         except Exception as e:
             print(f"[DB] Supabase save_message failed: {e}. Falling back to SQLite.")
-            
+
     # SQLite fallback
     init_sqlite_db()
     metadata_json = json.dumps(metadata) if metadata else None
@@ -226,7 +258,7 @@ def get_room_title(room_id):
                 return res.data[0]["title"]
         except:
             pass
-            
+
     # SQLite fallback
     init_sqlite_db()
     conn = get_sqlite_conn()

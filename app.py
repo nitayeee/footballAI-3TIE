@@ -18,6 +18,13 @@ from services.epl_predict import get_teams, predict_epl_match
 app = Flask(__name__)
 app.secret_key = "sistem_besar_deep_learning_secret_key"
 
+def get_session_id():
+    """Per-browser visitor id (Flask signed cookie) so chat history is not shared globally."""
+    if 'visitor_id' not in session:
+        session['visitor_id'] = str(uuid.uuid4())
+        session.permanent = True
+    return session['visitor_id']
+
 # Configure Upload folders inside static/uploads
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
@@ -388,7 +395,7 @@ from services import db
 @app.route('/api/chat/rooms', methods=['GET'])
 def api_get_rooms():
     try:
-        rooms = db.get_rooms()
+        rooms = db.get_rooms(get_session_id())
         return jsonify(rooms)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -398,7 +405,7 @@ def api_create_room():
     try:
         data = request.json or {}
         title = data.get("title", "Percakapan Baru")
-        room_id = db.create_room(title)
+        room_id = db.create_room(get_session_id(), title)
         return jsonify({"success": True, "room_id": room_id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -410,7 +417,7 @@ def api_update_room_title(room_id):
         title = data.get("title")
         if not title:
             return jsonify({"error": "Title required"}), 400
-        db.update_room_title(room_id, title)
+        db.update_room_title(room_id, get_session_id(), title)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -418,7 +425,7 @@ def api_update_room_title(room_id):
 @app.route('/api/chat/rooms/<room_id>', methods=['DELETE'])
 def api_delete_room(room_id):
     try:
-        db.delete_room(room_id)
+        db.delete_room(room_id, get_session_id())
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -426,7 +433,7 @@ def api_delete_room(room_id):
 @app.route('/api/chat/rooms/<room_id>/messages', methods=['GET'])
 def api_get_messages(room_id):
     try:
-        messages = db.get_messages(room_id)
+        messages = db.get_messages(room_id, get_session_id())
         return jsonify(messages)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -440,7 +447,7 @@ def api_save_message(room_id):
         metadata = data.get("metadata")
         if not sender or not content:
             return jsonify({"error": "Sender and content required"}), 400
-        db.save_message(room_id, sender, content, metadata)
+        db.save_message(room_id, get_session_id(), sender, content, metadata)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

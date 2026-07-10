@@ -1300,3 +1300,148 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
     }
 }
+
+
+/* Custom confirm modal (replaces native browser confirm()) */
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: confirmFadeIn 0.2s ease;
+}
+.confirm-modal-card {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 1.75rem 1.5rem;
+    max-width: 340px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    animation: confirmPopIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.confirm-modal-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--danger);
+}
+.confirm-modal-message {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+.confirm-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+.confirm-modal-actions .btn {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+}
+.btn-danger {
+    background: var(--danger-gradient);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+}
+@keyframes confirmFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes confirmPopIn {
+    from { opacity: 0; transform: scale(0.9) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+
+/* EPL result header (Kel_2 only, scoped classes) */
+.epl-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding: 0.15rem 0 1rem 0.9rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+}
+.epl-result-title-group {
+    min-width: 0;
+}
+.epl-result-kicker {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 0 0 1px;
+}
+.epl-result-team {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-outfit);
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* EPL probability bar list, polished (Kel_2 only, scoped classes) */
+.epl-prob-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--bg-primary);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    padding: 1.15rem 1.1rem;
+    box-shadow: var(--card-shadow);
+}
+.epl-prob-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.45rem;
+}
+.epl-prob-row-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+.epl-prob-row-value {
+    font-family: var(--font-outfit);
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+.epl-prob-row-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(15, 23, 42, 0.06);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.epl-prob-row-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}

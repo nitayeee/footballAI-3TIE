@@ -13,7 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     let selectedFeature = null;
-    let currentRoomId = localStorage.getItem("activeRoomId") || null;
+    const forceNewChat = new URLSearchParams(window.location.search).get("new") === "1";
+    let currentRoomId = forceNewChat ? null : (localStorage.getItem("activeRoomId") || null);
     
     const sidebar = document.getElementById("chat-sidebar");
     const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
@@ -37,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (newChatBtn) {
             newChatBtn.addEventListener("click", () => {
-                createNewRoom();
+                resetToDraftChat();
             });
         }
 
@@ -46,8 +47,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (currentRoomId) {
             await switchRoom(currentRoomId);
         } else {
-            await createNewRoom();
+            startChatFlow();
         }
+    }
+
+    function resetToDraftChat() {
+        currentRoomId = null;
+        localStorage.removeItem("activeRoomId");
+        document.querySelectorAll(".room-item").forEach(item => item.classList.remove("active"));
+        if (sidebar) sidebar.classList.remove("active");
+        chatHistory.innerHTML = "";
+        selectedFeature = null;
+        startChatFlow();
     }
 
     async function refreshRoomsList() {
@@ -108,7 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function deleteRoom(roomId) {
-        if (!confirm("Apakah Anda yakin ingin menghapus percakapan ini?")) return;
+        const confirmed = await showConfirmModal("Apakah Anda yakin ingin menghapus percakapan ini?");
+        if (!confirmed) return;
         try {
             const res = await fetch(`/api/chat/rooms/${roomId}`, { method: "DELETE" });
             const data = await res.json();
@@ -125,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         await switchRoom(nextId);
                     }
                 } else {
-                    await createNewRoom();
+                    resetToDraftChat();
                 }
             }
         } catch (err) {
@@ -161,10 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (msg.sender === "user") {
                         appendUserBubbleDirect(msg.content);
                     } else {
-                        appendSystemBubbleDirect(msg.content);
+                        const bubbleEl = appendSystemBubbleDirect(msg.content);
                         if (msg.metadata) {
                             reconstructVisualizations(msg.metadata.suffix || msg.metadata.chart_id, msg.metadata);
                         }
+                        reviveEplFormIfPresent(bubbleEl);
                     }
                 });
             }
@@ -340,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (restartBtn) {
         restartBtn.addEventListener("click", () => {
-            createNewRoom();
+            resetToDraftChat();
         });
     }
 
@@ -356,6 +369,42 @@ document.addEventListener("DOMContentLoaded", () => {
         chatHistory.appendChild(bubble);
         scrollToBottom();
         return bubble;
+    }
+
+    // Revives a restored EPL team-select form that was saved to history while
+    // still showing the "Memuat daftar tim..." placeholder (never got populated
+    // because the original API fetch/listeners only ran once, live, at creation time).
+    function reviveEplFormIfPresent(bubbleEl) {
+        if (!bubbleEl) return;
+        const selectEl = bubbleEl.querySelector('select[id^="epl-team-select-"]');
+        if (!selectEl) return;
+        const suffix = selectEl.id.replace("epl-team-select-", "");
+        const form = document.getElementById(`epl-form-${suffix}`);
+        if (!form || form.dataset.revived === "1") return;
+        form.dataset.revived = "1";
+
+        const btnPredict = document.getElementById(`btn-epl-predict-${suffix}`);
+
+        fetch("/api/epl/teams")
+            .then(res => res.json())
+            .then(teams => {
+                if (!selectEl.isConnected) return;
+                selectEl.innerHTML = '<option value="" disabled selected>Pilih Tim</option>';
+                teams.forEach(t => {
+                    const opt = document.createElement("option");
+                    opt.value = t;
+                    opt.textContent = t;
+                    selectEl.appendChild(opt);
+                });
+                if (btnPredict) btnPredict.disabled = false;
+            })
+            .catch(() => {
+                if (selectEl.isConnected) {
+                    selectEl.innerHTML = '<option value="" disabled selected>Gagal memuat tim</option>';
+                }
+            });
+
+        setupEplSubmit(suffix);
     }
 
     function appendSystemBubble(htmlContent, metadata = null) {
@@ -403,6 +452,40 @@ document.addEventListener("DOMContentLoaded", () => {
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
+    function showConfirmModal(message) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement("div");
+            overlay.className = "confirm-modal-overlay";
+            overlay.innerHTML = `
+                <div class="confirm-modal-card">
+                    <div class="confirm-modal-icon"><svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div>
+                    <p class="confirm-modal-message">${message}</p>
+                    <div class="confirm-modal-actions">
+                        <button class="btn btn-secondary confirm-modal-cancel" type="button">Batal</button>
+                        <button class="btn btn-danger confirm-modal-ok" type="button">Hapus</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const cleanup = (result) => {
+                overlay.remove();
+                document.removeEventListener("keydown", onKeydown);
+                resolve(result);
+            };
+            const onKeydown = (e) => {
+                if (e.key === "Escape") cleanup(false);
+            };
+
+            overlay.querySelector(".confirm-modal-cancel").addEventListener("click", () => cleanup(false));
+            overlay.querySelector(".confirm-modal-ok").addEventListener("click", () => cleanup(true));
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) cleanup(false);
+            });
+            document.addEventListener("keydown", onKeydown);
+        });
+    }
+
     function appendQuickReplyButtons() {
         const container = document.createElement("div");
         container.className = "quick-reply-container";
@@ -427,17 +510,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function handleFeatureSelection(featureKey, featureName) {
         try {
-            const currentTitle = document.querySelector(`.room-item[data-id="${currentRoomId}"] .room-title-text`);
-            if (currentTitle && currentTitle.textContent === "Percakapan Baru") {
-                await fetch(`/api/chat/rooms/${currentRoomId}`, {
-                    method: "PUT",
+            if (!currentRoomId) {
+                // Lazy room creation: only persist a conversation once a feature is actually picked
+                const res = await fetch("/api/chat/rooms", {
+                    method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ title: featureName })
                 });
-                await refreshRoomsList();
+                const data = await res.json();
+                if (data.success) {
+                    currentRoomId = data.room_id;
+                    localStorage.setItem("activeRoomId", currentRoomId);
+                    await refreshRoomsList();
+                }
+            } else {
+                const currentTitle = document.querySelector(`.room-item[data-id="${currentRoomId}"] .room-title-text`);
+                if (currentTitle && currentTitle.textContent === "Percakapan Baru") {
+                    await fetch(`/api/chat/rooms/${currentRoomId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: featureName })
+                    });
+                    await refreshRoomsList();
+                }
             }
         } catch (err) {
-            console.error("Error renaming room:", err);
+            console.error("Error preparing room:", err);
         }
 
         // Clear all quick reply containers currently at the end
@@ -590,7 +688,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(res => res.json())
             .then(teams => {
                 if (selectEl) {
-                    selectEl.innerHTML = '<option value="" disabled selected>— Pilih Tim —</option>';
+                    selectEl.innerHTML = '<option value="" disabled selected>Pilih Tim</option>';
                     teams.forEach(t => {
                         const opt = document.createElement("option");
                         opt.value = t;
