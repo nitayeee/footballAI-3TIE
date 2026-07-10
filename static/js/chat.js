@@ -146,6 +146,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function switchRoom(roomId) {
+        if (window.gymPollInterval) {
+            clearInterval(window.gymPollInterval);
+            window.gymPollInterval = null;
+        }
+        if (window.gymStream) {
+            window.gymStream.getTracks().forEach(track => track.stop());
+            window.gymStream = null;
+        }
         currentRoomId = roomId;
         localStorage.setItem("activeRoomId", roomId);
         
@@ -577,15 +585,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const btnUpload = document.getElementById(`btn-gym-upload-${suffix}`);
             const inputArea = document.getElementById(`gym-input-area-${suffix}`);
 
-            btnWebcam.addEventListener("click", () => {
+            btnWebcam.addEventListener("click", async () => {
                 if (window.gymPollInterval) {
                     clearInterval(window.gymPollInterval);
+                }
+                if (window.gymStream) {
+                    window.gymStream.getTracks().forEach(track => track.stop());
                 }
                 
                 inputArea.innerHTML = `
                     <div style="margin-top:1rem; text-align:center;">
-                        <div class="processed-media" style="border: 2px solid var(--primary); border-radius:12px; overflow:hidden; background:#000;">
-                            <img src="/api/gym/video_feed?t=${Date.now()}" alt="Live Webcam Feed" style="width:100%; display:block;">
+                        <div class="processed-media" style="border: 2px solid var(--primary); border-radius:12px; overflow:hidden; background:#000; position:relative;">
+                            <video id="webcam-raw" autoplay playsinline style="display:none;"></video>
+                            <canvas id="webcam-canvas" style="display:none;"></canvas>
+                            <img id="webcam-display" alt="Live Webcam Feed" style="width:100%; display:block; min-height:240px; background:#111;">
+                            <div id="webcam-status-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:0.9rem;">Memulai kamera...</div>
                         </div>
                         <div class="details-grid" style="margin-top:1rem; text-align:left;">
                             <div class="detail-item"><strong>Latihan:</strong> <span id="live-ex-${suffix}">—</span></div>
@@ -600,32 +614,81 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 `;
 
+                const videoRaw = document.getElementById("webcam-raw");
+                const canvas = document.getElementById("webcam-canvas");
+                const imgDisplay = document.getElementById("webcam-display");
+                const statusOverlay = document.getElementById("webcam-status-overlay");
+
                 // Reset counter on start
                 fetch("/api/gym/reset", { method: "POST" }).catch(console.error);
 
-                // Polling status
-                window.gymPollInterval = setInterval(() => {
-                    const elEx = document.getElementById(`live-ex-${suffix}`);
-                    if (!elEx) {
-                        clearInterval(window.gymPollInterval);
-                        return;
-                    }
-                    fetch("/api/gym/status")
-                    .then(res => res.json())
-                    .then(data => {
-                        const elEx = document.getElementById(`live-ex-${suffix}`);
-                        const elConf = document.getElementById(`live-conf-${suffix}`);
-                        const elReps = document.getElementById(`live-reps-${suffix}`);
-                        const elFeedback = document.getElementById(`live-feedback-${suffix}`);
-                        if (elEx && elConf && elReps && elFeedback) {
-                            elEx.textContent = data.exercise.toUpperCase();
-                            elConf.textContent = data.confidence + "%";
-                            elReps.textContent = data.reps;
-                            elFeedback.textContent = data.feedback;
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }
+                    });
+                    window.gymStream = stream;
+                    videoRaw.srcObject = stream;
+                    statusOverlay.textContent = "Menghubungkan ke AI...";
+                    
+                    let isProcessing = false;
+                    window.gymPollInterval = setInterval(() => {
+                        if (isProcessing) return;
+                        
+                        const ctx = canvas.getContext('2d');
+                        if (videoRaw.videoWidth > 0) {
+                            canvas.width = videoRaw.videoWidth;
+                            canvas.height = videoRaw.videoHeight;
+                            ctx.drawImage(videoRaw, 0, 0, canvas.width, canvas.height);
+                            
+                            isProcessing = true;
+                            canvas.toBlob(async (blob) => {
+                                if (!blob) {
+                                    isProcessing = false;
+                                    return;
+                                }
+                                
+                                const formData = new FormData();
+                                formData.append('frame', blob, 'frame.jpg');
+                                
+                                try {
+                                    const res = await fetch("/api/gym/predict_frame", {
+                                        method: "POST",
+                                        body: formData
+                                    });
+                                    const data = await res.json();
+                                    
+                                    if (data.success) {
+                                        statusOverlay.style.display = "none";
+                                        imgDisplay.src = data.annotated_frame;
+                                        
+                                        const elEx = document.getElementById(`live-ex-${suffix}`);
+                                        const elConf = document.getElementById(`live-conf-${suffix}`);
+                                        const elReps = document.getElementById(`live-reps-${suffix}`);
+                                        const elFeedback = document.getElementById(`live-feedback-${suffix}`);
+                                        
+                                        if (elEx && elConf && elReps && elFeedback) {
+                                            elEx.textContent = data.exercise.toUpperCase();
+                                            elConf.textContent = data.confidence + "%";
+                                            elReps.textContent = data.reps;
+                                            elFeedback.textContent = data.feedback;
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error("Frame processing error:", err);
+                                    statusOverlay.textContent = "Gagal memproses frame.";
+                                    statusOverlay.style.display = "block";
+                                } finally {
+                                    isProcessing = false;
+                                }
+                            }, 'image/jpeg', 0.6);
                         }
-                    })
-                    .catch(console.error);
-                }, 500);
+                    }, 250);
+
+                } catch (err) {
+                    console.error("Camera access error:", err);
+                    statusOverlay.textContent = "Kamera tidak diizinkan atau tidak ditemukan.";
+                    statusOverlay.style.display = "block";
+                }
 
                 // Reset button event
                 document.getElementById(`btn-gym-reset-${suffix}`).addEventListener("click", () => {
@@ -642,9 +705,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Stop button event
                 document.getElementById(`btn-gym-stop-${suffix}`).addEventListener("click", () => {
-                    clearInterval(window.gymPollInterval);
-                    const img = inputArea.querySelector("img");
-                    if (img) img.src = "";
+                    if (window.gymPollInterval) {
+                        clearInterval(window.gymPollInterval);
+                    }
+                    if (window.gymStream) {
+                        window.gymStream.getTracks().forEach(track => track.stop());
+                    }
                     inputArea.innerHTML = `<p style="font-size:0.9rem; color:var(--text-secondary); margin-top:1rem;">Kamera dihentikan.</p>`;
                     appendQuickReplyButtons();
                 });
